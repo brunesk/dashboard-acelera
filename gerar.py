@@ -324,22 +324,51 @@ body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; back
   </div>
   <p class="text-center text-xs text-slate-400 pb-4">Atualizado automaticamente todo dia à meia-noite · {periodo}</p>
 </div>
-
-<script>
-const L={json.dumps(dias_fmt)},liq={json.dumps(hm_liq_series)},g={json.dumps(gasto_series)},lu={json.dumps(lucro_series)},v={json.dumps(vendas_series)};
-const ac=lu.reduce((a,x,i)=>{{a.push((a[i-1]||0)+x);return a}},[]);
-const pt=x=>'R$'+x.toLocaleString('pt-BR',{{maximumFractionDigits:0}});
-const cfg={{responsive:true,maintainAspectRatio:false,interaction:{{mode:'index',intersect:false}}}};
-new Chart(cDiario,{{data:{{labels:L,datasets:[
-  {{type:'line',label:'Rec. Líq.',data:liq,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.08)',fill:true,tension:.4,pointRadius:3,borderWidth:2.5}},
-  {{type:'line',label:'Gasto Meta',data:g,borderColor:'#f87171',backgroundColor:'rgba(248,113,113,.08)',fill:true,tension:.4,pointRadius:3,borderWidth:2.5}},
-  {{type:'bar',label:'Lucro',data:lu,backgroundColor:lu.map(x=>x>=0?'rgba(16,185,129,.75)':'rgba(239,68,68,.7)'),borderRadius:4}}
-]}},options:{{...cfg,plugins:{{legend:{{display:false}},tooltip:{{callbacks:{{label:c=>` ${{c.dataset.label}}: ${{pt(c.parsed.y)}}`}}}}}},scales:{{x:{{grid:{{display:false}}}},y:{{grid:{{color:'#f1f5f9'}},ticks:{{callback:pt}}}}}}}}));
-new Chart(cVendas,{{type:'bar',data:{{labels:L,datasets:[{{data:v,backgroundColor:'#bfdbfe',borderColor:'#3b82f6',borderWidth:1.5,borderRadius:5}}]}},options:{{...cfg,plugins:{{legend:{{display:false}}}},scales:{{x:{{grid:{{display:false}}}},y:{{ticks:{{stepSize:2}}}}}}}}));
-new Chart(cAcum,{{type:'line',data:{{labels:L,datasets:[{{data:ac,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.4,pointRadius:3,borderWidth:2.5}}]}},options:{{...cfg,plugins:{{legend:{{display:false}}}},scales:{{x:{{grid:{{display:false}}}},y:{{ticks:{{callback:pt}}}}}}}}));
-</script>
+__SCRIPT__
 </body>
 </html>'''
+
+script_block = '<script>\nwindow.addEventListener("DOMContentLoaded", function() {\n'
+script_block += '  var L   = ' + json.dumps(dias_fmt) + ';\n'
+script_block += '  var liq = ' + json.dumps(hm_liq_series) + ';\n'
+script_block += '  var g   = ' + json.dumps(gasto_series) + ';\n'
+script_block += '  var lu  = ' + json.dumps(lucro_series) + ';\n'
+script_block += '  var v   = ' + json.dumps(vendas_series) + ';\n'
+script_block += r"""
+  var ac = lu.reduce(function(a,x,i){ a.push((a[i-1]||0)+x); return a; }, []);
+  var pt = function(x){ return 'R$'+x.toLocaleString('pt-BR',{maximumFractionDigits:0}); };
+
+  new Chart(document.getElementById('cDiario'), {
+    data: { labels: L, datasets: [
+      {type:'line', label:'Rec. Líq.',  data:liq, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.08)', fill:true, tension:.4, pointRadius:3, borderWidth:2.5},
+      {type:'line', label:'Gasto Meta', data:g,   borderColor:'#f87171', backgroundColor:'rgba(248,113,113,.08)', fill:true, tension:.4, pointRadius:3, borderWidth:2.5},
+      {type:'bar',  label:'Lucro',      data:lu,  backgroundColor:lu.map(function(x){return x>=0?'rgba(16,185,129,.75)':'rgba(239,68,68,.7)';}), borderRadius:4}
+    ]},
+    options: { responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': '+pt(c.parsed.y);}}} },
+      scales:{ x:{grid:{display:false}}, y:{grid:{color:'#f1f5f9'},ticks:{callback:pt}} }
+    }
+  });
+
+  new Chart(document.getElementById('cVendas'), {
+    type: 'bar',
+    data: { labels: L, datasets: [{data:v, backgroundColor:'#bfdbfe', borderColor:'#3b82f6', borderWidth:1.5, borderRadius:5}] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{grid:{display:false}}, y:{ticks:{stepSize:2}} }
+    }
+  });
+
+  new Chart(document.getElementById('cAcum'), {
+    type: 'line',
+    data: { labels: L, datasets: [{data:ac, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,.1)', fill:true, tension:.4, pointRadius:3, borderWidth:2.5}] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{grid:{display:false}}, y:{ticks:{callback:pt}} }
+    }
+  });
+});
+</script>"""
+
+html = html.replace('__SCRIPT__', script_block)
 
 with open('index.html', 'w', encoding='utf-8') as f:
     f.write(html)
