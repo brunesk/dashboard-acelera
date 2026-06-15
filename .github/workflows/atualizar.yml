@@ -1,0 +1,33 @@
+name: Atualizar Dashboard
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # 3h UTC = meia-noite BRT
+  workflow_dispatch:        # permite rodar manualmente
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Gerar dashboard
+        env:
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          HOTMART_BASIC: ${{ secrets.HOTMART_BASIC }}
+        run: python gerar.py 14
+
+      - name: Commit e push
+        run: |
+          git config user.name "dashboard-bot"
+          git config user.email "bot@github.com"
+          git add index.html
+          git diff --staged --quiet || git commit -m "dashboard: $(date +'%d/%m/%Y %H:%M BRT')"
+          git push

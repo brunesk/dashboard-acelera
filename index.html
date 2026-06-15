@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1e3a8a">
+<title>Dashboard — Acelera Shopee</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+* { box-sizing:border-box }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f8fafc }
+.card { background:white; border-radius:16px; box-shadow:0 1px 3px rgba(0,0,0,.07); border:1px solid #f1f5f9 }
+</style>
+</head>
+<body class="min-h-screen">
+
+<div style="background:linear-gradient(135deg,#1e3a8a,#1d4ed8,#2563eb)" class="text-white px-4 py-7 md:px-6 md:py-8">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex items-start justify-between flex-wrap gap-3 mb-7">
+      <div>
+        <div class="flex items-center gap-2.5 mb-1">
+          <div class="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          </div>
+          <h1 class="text-xl font-black tracking-tight">Acelera Shopee</h1>
+        </div>
+        <p class="text-blue-200 text-xs">Meta Ads + Hotmart · 01/06 – 14/06/2026</p>
+      </div>
+      <div class="text-right">
+        <div class="inline-flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-xs text-blue-200">
+          <span class="w-1.5 h-1.5 bg-green-400 rounded-full inline-block"></span>
+          Atualizado 15/06/2026 às 13:44 (BRT)
+        </div>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
+      <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
+        <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Vendas</p>
+        <p class="text-3xl font-black">103</p>
+        <p class="text-blue-300 text-xs mt-0.5">Hotmart</p>
+      </div>
+      <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
+        <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Rec. Bruta</p>
+        <p class="text-xl font-black">R$6.984</p>
+        <p class="text-blue-300 text-xs mt-0.5">Hotmart</p>
+      </div>
+      <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
+        <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Gasto Meta</p>
+        <p class="text-xl font-black">R$4.088</p>
+        <p class="text-blue-300 text-xs mt-0.5">investido</p>
+      </div>
+      <div class="bg-green-400/30 border-green-300/40 rounded-2xl p-3.5 border">
+        <p class="text-green-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Lucro Real</p>
+        <p class="text-xl font-black text-green-300">+R$2.118</p>
+        <p class="text-green-300 text-xs mt-0.5">R$151/dia</p>
+      </div>
+      <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
+        <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">ROAS Real</p>
+        <p class="text-3xl font-black">1.71x</p>
+        <p class="text-blue-300 text-xs mt-0.5">bruto/gasto</p>
+      </div>
+      <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
+        <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Ticket Médio</p>
+        <p class="text-xl font-black">R$68</p>
+        <p class="text-blue-300 text-xs mt-0.5">por venda</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-6xl mx-auto px-4 py-6 md:px-6 space-y-5">
+  
+
+  <div class="card p-5">
+    <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
+      <div><h2 class="font-bold text-slate-800">Desempenho Diário</h2><p class="text-xs text-slate-400 mt-0.5">Receita Líq. HM vs Gasto Meta vs Lucro</p></div>
+      <div class="flex items-center gap-4 text-xs text-slate-500">
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block bg-blue-500"></span>Rec. Líq.</span>
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block bg-red-400"></span>Meta</span>
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block bg-emerald-500"></span>Lucro</span>
+      </div>
+    </div>
+    <div style="height:260px"><canvas id="cDiario"></canvas></div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <div class="card p-5">
+      <h2 class="font-bold text-slate-800 mb-0.5">Vendas / Dia</h2>
+      <p class="text-xs text-slate-400 mb-4">Compras no Hotmart</p>
+      <div style="height:170px"><canvas id="cVendas"></canvas></div>
+    </div>
+    <div class="card p-5">
+      <h2 class="font-bold text-slate-800 mb-0.5">Lucro Acumulado</h2>
+      <p class="text-xs text-slate-400 mb-4">Progressão no período</p>
+      <div style="height:170px"><canvas id="cAcum"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card overflow-hidden">
+    <div class="px-6 py-5 border-b border-slate-100"><h2 class="text-lg font-bold text-slate-800">Criativos</h2><p class="text-sm text-slate-400 mt-0.5">Ordenado por investimento · ROAS = atribuição pixel Meta</p></div>
+    <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide"><th class="text-left py-3 px-4">Criativo</th><th class="text-center py-3 px-4">Status</th><th class="text-right py-3 px-4">Gasto</th><th class="text-right py-3 px-4">Impressões</th><th class="text-right py-3 px-4">CTR</th><th class="text-right py-3 px-4">CPM</th><th class="text-right py-3 px-4">Compras</th><th class="text-right py-3 px-4">ROAS</th><th class="text-right py-3 px-4">CPA</th></tr></thead><tbody><tr class="border-b border-slate-100 hover:bg-slate-50">
+          <td class="py-3 px-4"><div class="flex items-center gap-2"><span>🥇</span><div><p class="font-semibold text-slate-800 text-sm">Video 04 — Cópia</p><div class="mt-1 h-1 bg-slate-100 rounded-full w-32"><div class="h-full rounded-full bg-blue-400" style="width:100%"></div></div></div></div></td>
+          <td class="py-3 px-4 text-center"><span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#dcfce7;color:#16a34a">ACTIVE</span></td>
+          <td class="py-3 px-4 text-right font-semibold text-slate-700">R$1.725</td>
+          <td class="py-3 px-4 text-right text-slate-600">83,038</td>
+          <td class="py-3 px-4 text-right text-slate-600">2.1%</td>
+          <td class="py-3 px-4 text-right text-slate-600">R$21</td>
+          <td class="py-3 px-4 text-right text-slate-600">48</td>
+          <td class="py-3 px-4 text-right font-bold" style="color:#16a34a">1.58x</td>
+          <td class="py-3 px-4 text-right text-slate-600">R$36</td>
+        </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+          <td class="py-3 px-4"><div class="flex items-center gap-2"><span>🥈</span><div><p class="font-semibold text-slate-800 text-sm">Video 01 — Cópia</p><div class="mt-1 h-1 bg-slate-100 rounded-full w-32"><div class="h-full rounded-full bg-blue-400" style="width:62%"></div></div></div></div></td>
+          <td class="py-3 px-4 text-center"><span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#dcfce7;color:#16a34a">ACTIVE</span></td>
+          <td class="py-3 px-4 text-right font-semibold text-slate-700">R$1.076</td>
+          <td class="py-3 px-4 text-right text-slate-600">38,631</td>
+          <td class="py-3 px-4 text-right text-slate-600">2.6%</td>
+          <td class="py-3 px-4 text-right text-slate-600">R$28</td>
+          <td class="py-3 px-4 text-right text-slate-600">22</td>
+          <td class="py-3 px-4 text-right font-bold" style="color:#ca8a04">1.23x</td>
+          <td class="py-3 px-4 text-right text-slate-600">R$49</td>
+        </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+          <td class="py-3 px-4"><div class="flex items-center gap-2"><span>🥉</span><div><p class="font-semibold text-slate-800 text-sm">Criativo 03 — Cópia</p><div class="mt-1 h-1 bg-slate-100 rounded-full w-32"><div class="h-full rounded-full bg-blue-400" style="width:62%"></div></div></div></div></td>
+          <td class="py-3 px-4 text-center"><span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#dcfce7;color:#16a34a">ACTIVE</span></td>
+          <td class="py-3 px-4 text-right font-semibold text-slate-700">R$1.075</td>
+          <td class="py-3 px-4 text-right text-slate-600">36,939</td>
+          <td class="py-3 px-4 text-right text-slate-600">1.9%</td>
+          <td class="py-3 px-4 text-right text-slate-600">R$29</td>
+          <td class="py-3 px-4 text-right text-slate-600">23</td>
+          <td class="py-3 px-4 text-right font-bold" style="color:#ca8a04">1.10x</td>
+          <td class="py-3 px-4 text-right text-slate-600">R$47</td>
+        </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+          <td class="py-3 px-4"><div class="flex items-center gap-2"><span>4º</span><div><p class="font-semibold text-slate-800 text-sm">Video 05 — Cópia</p><div class="mt-1 h-1 bg-slate-100 rounded-full w-32"><div class="h-full rounded-full bg-blue-400" style="width:9%"></div></div></div></div></td>
+          <td class="py-3 px-4 text-center"><span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#dcfce7;color:#16a34a">ACTIVE</span></td>
+          <td class="py-3 px-4 text-right font-semibold text-slate-700">R$165</td>
+          <td class="py-3 px-4 text-right text-slate-600">6,524</td>
+          <td class="py-3 px-4 text-right text-slate-600">1.9%</td>
+          <td class="py-3 px-4 text-right text-slate-600">R$25</td>
+          <td class="py-3 px-4 text-right text-slate-600">4</td>
+          <td class="py-3 px-4 text-right font-bold" style="color:#ca8a04">1.26x</td>
+          <td class="py-3 px-4 text-right text-slate-600">R$41</td>
+        </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+          <td class="py-3 px-4"><div class="flex items-center gap-2"><span>5º</span><div><p class="font-semibold text-slate-800 text-sm">Video 02 — Cópia</p><div class="mt-1 h-1 bg-slate-100 rounded-full w-32"><div class="h-full rounded-full bg-blue-400" style="width:2%"></div></div></div></div></td>
+          <td class="py-3 px-4 text-center"><span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#dcfce7;color:#16a34a">ACTIVE</span></td>
+          <td class="py-3 px-4 text-right font-semibold text-slate-700">R$46</td>
+          <td class="py-3 px-4 text-right text-slate-600">1,151</td>
+          <td class="py-3 px-4 text-right text-slate-600">2.6%</td>
+          <td class="py-3 px-4 text-right text-slate-600">R$40</td>
+          <td class="py-3 px-4 text-right text-slate-600">1</td>
+          <td class="py-3 px-4 text-right font-bold" style="color:#16a34a">1.52x</td>
+          <td class="py-3 px-4 text-right text-slate-600">R$46</td>
+        </tr></tbody></table></div>
+    <div class="px-6 py-3 bg-slate-50 border-t text-xs text-slate-400">ROAS real do período (Hotmart bruto / Meta gasto): <strong class="text-slate-600">1.71x</strong></div>
+    </div>
+
+  <div class="card overflow-hidden">
+    <div class="px-6 py-5 border-b border-slate-100"><h2 class="text-lg font-bold text-slate-800">Dia a Dia</h2></div>
+    <div class="overflow-x-auto"><table class="w-full text-sm">
+      <thead><tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+        <th class="text-left py-3 px-4">Dia</th><th class="text-right py-3 px-4">Vendas</th>
+        <th class="text-right py-3 px-4">Bruto</th><th class="text-right py-3 px-4">Líq. HM</th>
+        <th class="text-right py-3 px-4">Gasto Meta</th><th class="text-right py-3 px-4">Lucro</th>
+        <th class="text-right py-3 px-4">ROAS</th>
+      </tr></thead>
+      <tbody><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">01/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">5</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$325</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$289</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$287</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$1</td>
+      <td class="py-3 px-4 text-right font-semibold text-amber-600">1.13x</td>
+    </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">02/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">10</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$634</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$562</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$332</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$230</td>
+      <td class="py-3 px-4 text-right font-semibold text-green-600">1.91x</td>
+    </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">03/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">8</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$513</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$456</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$317</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$139</td>
+      <td class="py-3 px-4 text-right font-semibold text-green-600">1.62x</td>
+    </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">04/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">7</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$553</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$491</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$253</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$238</td>
+      <td class="py-3 px-4 text-right font-semibold text-green-600">2.19x</td>
+    </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">05/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">10</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$580</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$513</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$310</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$203</td>
+      <td class="py-3 px-4 text-right font-semibold text-green-600">1.87x</td>
+    </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">06/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">3</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$223</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$200</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$164</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$37</td>
+      <td class="py-3 px-4 text-right font-semibold text-amber-600">1.36x</td>
+    </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">07/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">5</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$412</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$368</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$274</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$94</td>
+      <td class="py-3 px-4 text-right font-semibold text-green-600">1.50x</td>
+    </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">08/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">11</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$579</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$511</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$315</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$196</td>
+      <td class="py-3 px-4 text-right font-semibold text-green-600">1.84x</td>
+    </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">09/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">7</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$479</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$425</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$237</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$188</td>
+      <td class="py-3 px-4 text-right font-semibold text-green-600">2.02x</td>
+    </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">10/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">7</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$523</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$465</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$297</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$168</td>
+      <td class="py-3 px-4 text-right font-semibold text-green-600">1.76x</td>
+    </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">11/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">11</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$825</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$736</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$390</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$346</td>
+      <td class="py-3 px-4 text-right font-semibold text-green-600">2.11x</td>
+    </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">12/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">6</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$370</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$329</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$309</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$20</td>
+      <td class="py-3 px-4 text-right font-semibold text-amber-600">1.20x</td>
+    </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">13/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">8</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$556</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$494</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$265</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$228</td>
+      <td class="py-3 px-4 text-right font-semibold text-green-600">2.10x</td>
+    </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <td class="py-3 px-4 font-semibold text-slate-700">14/06</td>
+      <td class="py-3 px-4 text-right text-slate-600">5</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$412</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$368</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$337</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$31</td>
+      <td class="py-3 px-4 text-right font-semibold text-amber-600">1.22x</td>
+    </tr></tbody>
+      <tfoot><tr class="bg-slate-50 font-bold border-t-2 border-slate-200">
+        <td class="py-3 px-4 text-slate-800">TOTAL</td>
+        <td class="py-3 px-4 text-right text-slate-800">103</td>
+        <td class="py-3 px-4 text-right text-slate-800">R$6.984</td>
+        <td class="py-3 px-4 text-right text-slate-800">R$6.206</td>
+        <td class="py-3 px-4 text-right text-slate-800">R$4.088</td>
+        <td class="py-3 px-4 text-right text-green-600">+R$2.118</td>
+        <td class="py-3 px-4 text-right text-green-600">1.71x</td>
+      </tr></tfoot>
+    </table></div>
+  </div>
+  <p class="text-center text-xs text-slate-400 pb-4">Atualizado automaticamente todo dia à meia-noite · 01/06 – 14/06/2026</p>
+</div>
+
+<script>
+const L=["01/06", "02/06", "03/06", "04/06", "05/06", "06/06", "07/06", "08/06", "09/06", "10/06", "11/06", "12/06", "13/06", "14/06"],liq=[289.0, 562.0, 456.0, 491.0, 513.0, 200.0, 368.0, 511.0, 425.0, 465.0, 736.0, 329.0, 494.0, 368.0],g=[287.0, 332.0, 317.0, 253.0, 310.0, 164.0, 274.0, 315.0, 237.0, 297.0, 390.0, 309.0, 265.0, 337.0],lu=[1.0, 230.0, 139.0, 238.0, 203.0, 37.0, 94.0, 196.0, 188.0, 168.0, 346.0, 20.0, 228.0, 31.0],v=[5, 10, 8, 7, 10, 3, 5, 11, 7, 7, 11, 6, 8, 5];
+const ac=lu.reduce((a,x,i)=>{a.push((a[i-1]||0)+x);return a},[]);
+const pt=x=>'R$'+x.toLocaleString('pt-BR',{maximumFractionDigits:0});
+const cfg={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false}};
+new Chart(cDiario,{data:{labels:L,datasets:[
+  {type:'line',label:'Rec. Líq.',data:liq,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.08)',fill:true,tension:.4,pointRadius:3,borderWidth:2.5},
+  {type:'line',label:'Gasto Meta',data:g,borderColor:'#f87171',backgroundColor:'rgba(248,113,113,.08)',fill:true,tension:.4,pointRadius:3,borderWidth:2.5},
+  {type:'bar',label:'Lucro',data:lu,backgroundColor:lu.map(x=>x>=0?'rgba(16,185,129,.75)':'rgba(239,68,68,.7)'),borderRadius:4}
+]},options:{...cfg,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${pt(c.parsed.y)}`}}},scales:{x:{grid:{display:false}},y:{grid:{color:'#f1f5f9'},ticks:{callback:pt}}}}));
+new Chart(cVendas,{type:'bar',data:{labels:L,datasets:[{data:v,backgroundColor:'#bfdbfe',borderColor:'#3b82f6',borderWidth:1.5,borderRadius:5}]},options:{...cfg,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{stepSize:2}}}}));
+new Chart(cAcum,{type:'line',data:{labels:L,datasets:[{data:ac,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.4,pointRadius:3,borderWidth:2.5}]},options:{...cfg,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{ticks:{callback:pt}}}}));
+</script>
+</body>
+</html>
