@@ -21,7 +21,7 @@ def load_env():
                         k, v = line.split('=', 1)
                         env[k.strip()] = v.strip()
             break
-    for key in ['META_ACCESS_TOKEN', 'HOTMART_BASIC']:
+    for key in ['META_ACCESS_TOKEN', 'HOTMART_BASIC', 'WORKFLOW_TOKEN']:
         if os.environ.get(key):
             env[key] = os.environ[key]
     return env
@@ -378,6 +378,40 @@ weekly_section = f'''<div class="card overflow-hidden">
     </table></div>
     </div>'''
 
+# ── Botão atualizar ──────────────────────────────────────────────────────────
+_wt = env.get('WORKFLOW_TOKEN', '')
+if _wt:
+    _js = (
+        'function triggerUpdate(){'
+        'var b=document.getElementById("btnAtualizar");'
+        'b.disabled=true;b.innerHTML="⏳ Iniciando...";'
+        'fetch("https://api.github.com/repos/brunesk/dashboard-acelera/actions/workflows/atualizar.yml/dispatches",'
+        '{"method":"POST","headers":{"Authorization":"Bearer ' + _wt + '",'
+        '"Accept":"application/vnd.github+json","Content-Type":"application/json"},'
+        '"body":JSON.stringify({"ref":"main"})})'
+        '.then(function(r){'
+        'if(r.status===204){'
+        'b.innerHTML="✓ Iniciado! Aguarde ~1 min";'
+        'b.style.background="rgba(22,163,74,.5)";'
+        'setTimeout(function(){b.innerHTML="↻ Atualizar agora";b.style.background="";b.disabled=false;},90000);'
+        '}else{'
+        'b.innerHTML="✗ Erro — tente no GitHub";'
+        'b.style.background="rgba(220,38,38,.5)";b.disabled=false;}'
+        '}).catch(function(){'
+        'b.innerHTML="✗ Erro de conexão";b.disabled=false;});}'
+    )
+    update_btn = (
+        '<button id="btnAtualizar" onclick="triggerUpdate()" '
+        'style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;'
+        'background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);'
+        'border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600;'
+        'color:white;cursor:pointer;transition:background .2s">'
+        '↻ Atualizar agora</button>'
+        '<script>' + _js + '</script>'
+    )
+else:
+    update_btn = ''
+
 # ── HTML ──────────────────────────────────────────────────────────────────────
 html = f'''<!DOCTYPE html>
 <html lang="pt-BR">
@@ -410,11 +444,12 @@ body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; back
           </div>
         </div>
       </div>
-      <div class="text-right">
+      <div class="text-right flex flex-col items-end gap-1">
         <div class="inline-flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-xs text-blue-200">
           <span class="w-1.5 h-1.5 bg-green-400 rounded-full inline-block"></span>
           Atualizado {atualizado}
         </div>
+        {update_btn}
       </div>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
