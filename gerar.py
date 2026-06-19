@@ -95,16 +95,15 @@ env = load_env()
 BRT = timezone(timedelta(hours=-3))
 now = datetime.now(BRT)
 today = now.replace(hour=0, minute=0, second=0, microsecond=0)
-yesterday = today - timedelta(days=1)
 
 curr_month_key = today.strftime('%Y-%m')
 month_start = today.replace(day=1)
 month_start_str = month_start.strftime('%Y-%m-%d')
-yesterday_str = yesterday.strftime('%Y-%m-%d')
+today_str      = today.strftime('%Y-%m-%d')
 month_start_ms = int(month_start.timestamp() * 1000)
-yesterday_ms   = int(yesterday.replace(hour=23, minute=59, second=59).timestamp() * 1000)
+today_end_ms   = int(today.replace(hour=23, minute=59, second=59).timestamp() * 1000)
 
-print(f'Mês vigente: {month_start.strftime("%d/%m")} – {yesterday.strftime("%d/%m/%Y")}')
+print(f'Mês vigente: {month_start.strftime("%d/%m")} – {today.strftime("%d/%m/%Y")}')
 
 # ── Hotmart ───────────────────────────────────────────────────────────────────
 print('Buscando Hotmart...')
@@ -128,7 +127,7 @@ for item in hm_all:
     hm_by_month[m_key]['bruto'] += price
     hm_by_month[m_key]['liq']   += price - fee
 
-    if month_start_ms <= ts <= yesterday_ms:
+    if month_start_ms <= ts <= today_end_ms:
         hm_curr_day[d_key]['v']     += 1
         hm_curr_day[d_key]['bruto'] += price
         hm_curr_day[d_key]['liq']   += price - fee
@@ -140,7 +139,7 @@ prev_months = [m for m in all_months if m < curr_month_key]
 print('Buscando Meta (mês vigente)...')
 meta_token = env['META_ACCESS_TOKEN']
 
-meta_curr_raw = fetch_meta_daily(meta_token, month_start_str, yesterday_str)
+meta_curr_raw = fetch_meta_daily(meta_token, month_start_str, today_str)
 meta_ok       = meta_curr_raw is not None
 
 meta_curr_day = {}
@@ -168,7 +167,7 @@ if prev_months and meta_ok:
             meta_by_month[m]['spend']     += float(d.get('spend', 0))
             meta_by_month[m]['purchases'] += next((int(a['value']) for a in d.get('actions',[]) if a['action_type']=='purchase'), 0)
 
-ads_data = fetch_meta_ads(meta_token, month_start_str, yesterday_str) if meta_ok else None
+ads_data = fetch_meta_ads(meta_token, month_start_str, today_str) if meta_ok else None
 
 # ── KPIs mês vigente ──────────────────────────────────────────────────────────
 curr_days  = sorted(set(list(hm_curr_day.keys()) + list(meta_curr_day.keys())))
@@ -178,6 +177,25 @@ hm_liq_series = [round(hm_curr_day.get(d,{}).get('liq',0), 0)    for d in curr_d
 gasto_series  = [round(meta_curr_day.get(d,{}).get('spend',0), 0) for d in curr_days]
 lucro_series  = [round(hm_curr_day.get(d,{}).get('liq',0) - meta_curr_day.get(d,{}).get('spend',0), 0) for d in curr_days]
 vendas_series = [hm_curr_day.get(d,{}).get('v',0) for d in curr_days]
+
+# ── Semanas ──────────────────────────────────────────────────────────────────
+def week_of_month(day_str):
+    return (datetime.strptime(day_str, '%Y-%m-%d').day - 1) // 7 + 1
+
+today_wk = week_of_month(today_str) if curr_days else 1
+weekly_data = defaultdict(lambda: {'v':0,'bruto':0.0,'liq':0.0,'spend':0.0,'days':[]})
+for _d in curr_days:
+    _wk = week_of_month(_d)
+    _h = hm_curr_day.get(_d, {}); _m = meta_curr_day.get(_d, {})
+    weekly_data[_wk]['v']     += _h.get('v', 0)
+    weekly_data[_wk]['bruto'] += _h.get('bruto', 0.0)
+    weekly_data[_wk]['liq']   += _h.get('liq', 0.0)
+    weekly_data[_wk]['spend'] += _m.get('spend', 0.0)
+    weekly_data[_wk]['days'].append(_d)
+
+weekly_labels_js = json.dumps([f'Sem {wk}' for wk in sorted(weekly_data.keys())])
+weekly_lucro_js  = json.dumps([round(weekly_data[wk]['liq'] - weekly_data[wk]['spend'], 0)
+                                for wk in sorted(weekly_data.keys())])
 
 tv     = sum(h['v']     for h in hm_curr_day.values())
 tb     = sum(h['bruto'] for h in hm_curr_day.values())
@@ -266,7 +284,7 @@ total_roas_hist = total_hb/total_ms if total_ms>0 else 0
 total_lc = 'text-green-600' if total_ml>=0 else 'text-red-500'
 
 # ── Strings de contexto ───────────────────────────────────────────────────────
-periodo_vigente = f'{month_start.strftime("%d/%m")} – {yesterday.strftime("%d/%m/%Y")}'
+periodo_vigente = f'{month_start.strftime("%d/%m")} – {today.strftime("%d/%m/%Y")}'
 atualizado      = now.strftime('%d/%m/%Y às %H:%M (BRT)')
 aviso_meta = '' if meta_ok else '<div class="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3 flex items-center gap-3 mb-5 text-amber-800 text-sm"><span>⚠</span> Dados Meta indisponíveis — token expirado. Atualize META_ACCESS_TOKEN no GitHub Secrets.</div>'
 
@@ -306,6 +324,57 @@ if monthly_rows:
         <td class="py-3 px-4 text-right {total_lc}">{("+" if total_ml>=0 else "")}{brl(total_ml)}</td>
         <td class="py-3 px-4 text-right {total_rc}">{pct_roas(total_roas_hist) if total_ms>0 else "—"}</td>
       </tr></tfoot>
+    </table></div>
+    </div>'''
+
+# ── Seção semanal ─────────────────────────────────────────────────────────────
+weekly_rows = ''
+for _wk in sorted(weekly_data.keys()):
+    _wd = weekly_data[_wk]
+    _days = sorted(_wd['days'])
+    _period = (datetime.strptime(_days[0], '%Y-%m-%d').strftime('%d/%m')
+               + ' – ' + datetime.strptime(_days[-1], '%Y-%m-%d').strftime('%d/%m'))
+    _lucro_w = _wd['liq'] - _wd['spend']
+    _roas_w  = _wd['bruto'] / _wd['spend'] if _wd['spend'] > 0 else 0
+    _lc  = 'text-green-600' if _lucro_w >= 0 else 'text-red-500'
+    _rc  = 'text-green-600' if _roas_w >= 1.5 else 'text-amber-600' if _roas_w >= 1.0 else 'text-slate-400'
+    _badge = (' <span class="text-[10px] bg-blue-100 text-blue-600 rounded-full px-1.5 py-0.5 ml-1 font-semibold">atual</span>'
+              if _wk == today_wk else '')
+    _row_bg    = ' bg-blue-50/40' if _wk == today_wk else ''
+    _sign      = '+' if _lucro_w >= 0 else ''
+    _roas_str  = pct_roas(_roas_w) if _wd['spend'] > 0 else '—'
+    _meta_str  = brl(_wd['spend']) if _wd['spend'] else '—'
+    weekly_rows += (
+        f'<tr class="border-b border-slate-100 hover:bg-slate-50{_row_bg}">'
+        f'<td class="py-3 px-4 font-semibold text-slate-700">Semana {_wk}{_badge}</td>'
+        f'<td class="py-3 px-4 text-slate-400 text-xs">{_period}</td>'
+        f'<td class="py-3 px-4 text-right text-slate-600">{_wd["v"]}</td>'
+        f'<td class="py-3 px-4 text-right text-slate-600">{brl(_wd["bruto"])}</td>'
+        f'<td class="py-3 px-4 text-right text-slate-600">{brl(_wd["liq"])}</td>'
+        f'<td class="py-3 px-4 text-right text-slate-600">{_meta_str}</td>'
+        f'<td class="py-3 px-4 text-right font-bold {_lc}">{_sign}{brl(_lucro_w)}</td>'
+        f'<td class="py-3 px-4 text-right font-semibold {_rc}">{_roas_str}</td>'
+        f'</tr>'
+    )
+
+weekly_section = f'''<div class="card overflow-hidden">
+    <div class="px-6 py-5 border-b border-slate-100">
+      <h2 class="text-lg font-bold text-slate-800">Desempenho Semanal</h2>
+      <p class="text-sm text-slate-400 mt-0.5">Mês vigente · semanas de 7 dias a partir do dia 01</p>
+    </div>
+    <div class="px-5 pt-5 pb-1" style="height:130px"><canvas id="cSemanal"></canvas></div>
+    <div class="overflow-x-auto"><table class="w-full text-sm">
+      <thead><tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+        <th class="text-left py-3 px-4">Semana</th>
+        <th class="text-left py-3 px-4">Período</th>
+        <th class="text-right py-3 px-4">Vendas</th>
+        <th class="text-right py-3 px-4">Bruto</th>
+        <th class="text-right py-3 px-4">Líq. HM</th>
+        <th class="text-right py-3 px-4">Gasto Meta</th>
+        <th class="text-right py-3 px-4">Lucro</th>
+        <th class="text-right py-3 px-4">ROAS</th>
+      </tr></thead>
+      <tbody>{weekly_rows}</tbody>
     </table></div>
     </div>'''
 
@@ -412,6 +481,8 @@ body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; back
     </div>
   </div>
 
+  {weekly_section}
+
   {criativo_section}
 
   <!-- Tabela dia a dia mês vigente -->
@@ -451,6 +522,8 @@ script_block += 'var liq = ' + json.dumps(hm_liq_series) + ';\n'
 script_block += 'var g   = ' + json.dumps(gasto_series) + ';\n'
 script_block += 'var lu  = ' + json.dumps(lucro_series) + ';\n'
 script_block += 'var v   = ' + json.dumps(vendas_series) + ';\n'
+script_block += 'var wL  = ' + weekly_labels_js + ';\n'
+script_block += 'var wLu = ' + weekly_lucro_js + ';\n'
 script_block += r"""
 var ac = lu.reduce(function(a,x,i){ a.push((a[i-1]||0)+x); return a; }, []);
 var pt = function(x){ return 'R$'+x.toLocaleString('pt-BR',{maximumFractionDigits:0}); };
@@ -482,6 +555,20 @@ new Chart(document.getElementById('cAcum'), {
     scales:{ x:{grid:{display:false}}, y:{ticks:{callback:pt}} }
   }
 });
+
+if (document.getElementById('cSemanal')) {
+  new Chart(document.getElementById('cSemanal'), {
+    type: 'bar',
+    data: { labels: wL, datasets: [{
+      data: wLu,
+      backgroundColor: wLu.map(function(x){ return x>=0?'rgba(16,185,129,.75)':'rgba(239,68,68,.7)'; }),
+      borderRadius: 6
+    }]},
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{grid:{display:false}}, y:{ticks:{callback:pt}} }
+    }
+  });
+}
 </script>"""
 
 html = html.replace('__SCRIPT__', script_block)
