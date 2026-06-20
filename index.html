@@ -32,7 +32,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
       <div class="text-right flex flex-col items-end gap-1">
         <div class="inline-flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-xs text-blue-200">
           <span class="w-1.5 h-1.5 bg-green-400 rounded-full inline-block"></span>
-          Atualizado 20/06/2026 às 10:39 (BRT)
+          Atualizado 20/06/2026 às 12:39 (BRT)
         </div>
         <button id="btnAtualizar" onclick="triggerUpdate()" style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600;color:white;cursor:pointer;transition:background .2s">↻ Atualizar agora</button><script>function triggerUpdate(){var b=document.getElementById("btnAtualizar");b.disabled=true;b.innerHTML="⏳ Iniciando...";fetch("https://hook.us2.make.com/xec8oo29t9nftow0p3qnkcr4aslfnhhr",{"method":"POST","headers":{"Content-Type":"application/json"},"body":JSON.stringify({"trigger":"dashboard"})}).then(function(){b.innerHTML="✓ Iniciado! Aguarde ~1 min";b.style.background="rgba(22,163,74,.5)";setTimeout(function(){b.innerHTML="↻ Atualizar agora";b.style.background="";b.disabled=false;},90000);}).catch(function(){b.innerHTML="✗ Erro de conexão";b.disabled=false;});}</script>
       </div>
@@ -40,23 +40,23 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Vendas</p>
-        <p class="text-3xl font-black">154</p>
+        <p class="text-3xl font-black">155</p>
         <p class="text-blue-300 text-xs mt-0.5">mês atual</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Rec. Líquida</p>
-        <p class="text-xl font-black">R$9.359</p>
+        <p class="text-xl font-black">R$9.429</p>
         <p class="text-blue-300 text-xs mt-0.5">após taxa Hotmart</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Gasto Meta</p>
-        <p class="text-xl font-black">R$5.946</p>
+        <p class="text-xl font-black">R$5.990</p>
         <p class="text-blue-300 text-xs mt-0.5">investido</p>
       </div>
       <div class="bg-green-400/30 border-green-300/40 rounded-2xl p-3.5 border">
         <p class="text-green-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Lucro Real</p>
-        <p class="text-xl font-black text-green-300">+R$3.412</p>
-        <p class="text-green-300 text-xs mt-0.5">R$171/dia</p>
+        <p class="text-xl font-black text-green-300">+R$3.439</p>
+        <p class="text-green-300 text-xs mt-0.5">R$172/dia</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">ROAS Real</p>
@@ -118,7 +118,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
         <th class="text-right py-3 px-4">Lucro</th>
         <th class="text-right py-3 px-4">ROAS</th>
       </tr></thead>
-      <tbody><tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-3 px-4 font-semibold text-slate-700">Semana 1</td><td class="py-3 px-4 text-slate-400 text-xs">01/06 – 07/06</td><td class="py-3 px-4 text-right text-slate-600">48</td><td class="py-3 px-4 text-right text-slate-600">R$3.241</td><td class="py-3 px-4 text-right text-slate-600">R$2.879</td><td class="py-3 px-4 text-right text-slate-600">R$1.937</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$942</td><td class="py-3 px-4 text-right font-semibold text-green-600">1.67x</td></tr><tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-3 px-4 font-semibold text-slate-700">Semana 2</td><td class="py-3 px-4 text-slate-400 text-xs">08/06 – 14/06</td><td class="py-3 px-4 text-right text-slate-600">53</td><td class="py-3 px-4 text-right text-slate-600">R$3.586</td><td class="py-3 px-4 text-right text-slate-600">R$3.186</td><td class="py-3 px-4 text-right text-slate-600">R$2.151</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$1.036</td><td class="py-3 px-4 text-right font-semibold text-green-600">1.67x</td></tr><tr class="border-b border-slate-100 hover:bg-slate-50 bg-blue-50/40"><td class="py-3 px-4 font-semibold text-slate-700">Semana 3 <span class="text-[10px] bg-blue-100 text-blue-600 rounded-full px-1.5 py-0.5 ml-1 font-semibold">atual</span></td><td class="py-3 px-4 text-slate-400 text-xs">15/06 – 20/06</td><td class="py-3 px-4 text-right text-slate-600">53</td><td class="py-3 px-4 text-right text-slate-600">R$3.712</td><td class="py-3 px-4 text-right text-slate-600">R$3.294</td><td class="py-3 px-4 text-right text-slate-600">R$1.859</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$1.435</td><td class="py-3 px-4 text-right font-semibold text-green-600">2.00x</td></tr></tbody>
+      <tbody><tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-3 px-4 font-semibold text-slate-700">Semana 1</td><td class="py-3 px-4 text-slate-400 text-xs">01/06 – 07/06</td><td class="py-3 px-4 text-right text-slate-600">48</td><td class="py-3 px-4 text-right text-slate-600">R$3.241</td><td class="py-3 px-4 text-right text-slate-600">R$2.879</td><td class="py-3 px-4 text-right text-slate-600">R$1.937</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$942</td><td class="py-3 px-4 text-right font-semibold text-green-600">1.67x</td></tr><tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-3 px-4 font-semibold text-slate-700">Semana 2</td><td class="py-3 px-4 text-slate-400 text-xs">08/06 – 14/06</td><td class="py-3 px-4 text-right text-slate-600">53</td><td class="py-3 px-4 text-right text-slate-600">R$3.586</td><td class="py-3 px-4 text-right text-slate-600">R$3.186</td><td class="py-3 px-4 text-right text-slate-600">R$2.151</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$1.036</td><td class="py-3 px-4 text-right font-semibold text-green-600">1.67x</td></tr><tr class="border-b border-slate-100 hover:bg-slate-50 bg-blue-50/40"><td class="py-3 px-4 font-semibold text-slate-700">Semana 3 <span class="text-[10px] bg-blue-100 text-blue-600 rounded-full px-1.5 py-0.5 ml-1 font-semibold">atual</span></td><td class="py-3 px-4 text-slate-400 text-xs">15/06 – 20/06</td><td class="py-3 px-4 text-right text-slate-600">54</td><td class="py-3 px-4 text-right text-slate-600">R$3.791</td><td class="py-3 px-4 text-right text-slate-600">R$3.364</td><td class="py-3 px-4 text-right text-slate-600">R$1.903</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$1.461</td><td class="py-3 px-4 text-right font-semibold text-green-600">1.99x</td></tr></tbody>
     </table></div>
     </div>
 
@@ -135,20 +135,20 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
           <td class="py-3 px-4 text-right font-bold" style="color:#16a34a">1.60x</td>
           <td class="py-3 px-4 text-right text-slate-600">R$35</td>
         </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
-          <td class="py-3 px-4"><div class="flex items-center gap-2"><span>🥈</span><div><p class="font-semibold text-slate-800 text-sm">Video 05 — Cópia</p><div class="mt-1 h-1 bg-slate-100 rounded-full w-32"><div class="h-full rounded-full bg-blue-400" style="width:90%"></div></div></div></div></td>
+          <td class="py-3 px-4"><div class="flex items-center gap-2"><span>🥈</span><div><p class="font-semibold text-slate-800 text-sm">Video 05 — Cópia</p><div class="mt-1 h-1 bg-slate-100 rounded-full w-32"><div class="h-full rounded-full bg-blue-400" style="width:92%"></div></div></div></div></td>
           <td class="py-3 px-4 text-center"><span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#dcfce7;color:#16a34a">ACTIVE</span></td>
-          <td class="py-3 px-4 text-right font-semibold text-slate-700">R$1.628</td>
-          <td class="py-3 px-4 text-right text-slate-600">63,782</td>
+          <td class="py-3 px-4 text-right font-semibold text-slate-700">R$1.670</td>
+          <td class="py-3 px-4 text-right text-slate-600">65,621</td>
           <td class="py-3 px-4 text-right text-slate-600">2.1%</td>
-          <td class="py-3 px-4 text-right text-slate-600">R$26</td>
-          <td class="py-3 px-4 text-right text-slate-600">37</td>
-          <td class="py-3 px-4 text-right font-bold" style="color:#ca8a04">1.37x</td>
+          <td class="py-3 px-4 text-right text-slate-600">R$25</td>
+          <td class="py-3 px-4 text-right text-slate-600">38</td>
+          <td class="py-3 px-4 text-right font-bold" style="color:#ca8a04">1.36x</td>
           <td class="py-3 px-4 text-right text-slate-600">R$44</td>
         </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
           <td class="py-3 px-4"><div class="flex items-center gap-2"><span>🥉</span><div><p class="font-semibold text-slate-800 text-sm">Video 01 — Cópia</p><div class="mt-1 h-1 bg-slate-100 rounded-full w-32"><div class="h-full rounded-full bg-blue-400" style="width:72%"></div></div></div></div></td>
           <td class="py-3 px-4 text-center"><span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#dcfce7;color:#16a34a">ACTIVE</span></td>
           <td class="py-3 px-4 text-right font-semibold text-slate-700">R$1.315</td>
-          <td class="py-3 px-4 text-right text-slate-600">47,457</td>
+          <td class="py-3 px-4 text-right text-slate-600">47,459</td>
           <td class="py-3 px-4 text-right text-slate-600">2.6%</td>
           <td class="py-3 px-4 text-right text-slate-600">R$28</td>
           <td class="py-3 px-4 text-right text-slate-600">29</td>
@@ -157,8 +157,8 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
         </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
           <td class="py-3 px-4"><div class="flex items-center gap-2"><span>4º</span><div><p class="font-semibold text-slate-800 text-sm">Criativo 03 — Cópia</p><div class="mt-1 h-1 bg-slate-100 rounded-full w-32"><div class="h-full rounded-full bg-blue-400" style="width:62%"></div></div></div></div></td>
           <td class="py-3 px-4 text-center"><span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#dcfce7;color:#16a34a">ACTIVE</span></td>
-          <td class="py-3 px-4 text-right font-semibold text-slate-700">R$1.120</td>
-          <td class="py-3 px-4 text-right text-slate-600">38,057</td>
+          <td class="py-3 px-4 text-right font-semibold text-slate-700">R$1.121</td>
+          <td class="py-3 px-4 text-right text-slate-600">38,058</td>
           <td class="py-3 px-4 text-right text-slate-600">1.9%</td>
           <td class="py-3 px-4 text-right text-slate-600">R$29</td>
           <td class="py-3 px-4 text-right text-slate-600">24</td>
@@ -337,25 +337,25 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
       <td class="py-3 px-4 text-right text-slate-600">12</td>
       <td class="py-3 px-4 text-right text-slate-600">R$788</td>
       <td class="py-3 px-4 text-right text-slate-600">R$698</td>
-      <td class="py-3 px-4 text-right text-slate-600">R$333</td>
-      <td class="py-3 px-4 text-right font-bold text-green-600">+R$365</td>
-      <td class="py-3 px-4 text-right font-semibold text-green-600">2.10x</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$334</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$364</td>
+      <td class="py-3 px-4 text-right font-semibold text-green-600">2.09x</td>
     </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
       <td class="py-3 px-4 font-semibold text-slate-700">20/06</td>
-      <td class="py-3 px-4 text-right text-slate-600">5</td>
-      <td class="py-3 px-4 text-right text-slate-600">R$355</td>
-      <td class="py-3 px-4 text-right text-slate-600">R$315</td>
-      <td class="py-3 px-4 text-right text-slate-600">R$118</td>
-      <td class="py-3 px-4 text-right font-bold text-green-600">+R$197</td>
-      <td class="py-3 px-4 text-right font-semibold text-green-600">2.66x</td>
+      <td class="py-3 px-4 text-right text-slate-600">6</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$434</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$385</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$161</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$224</td>
+      <td class="py-3 px-4 text-right font-semibold text-green-600">2.39x</td>
     </tr></tbody>
       <tfoot><tr class="bg-slate-50 font-bold border-t-2 border-slate-200">
         <td class="py-3 px-4 text-slate-800">TOTAL MÊS</td>
-        <td class="py-3 px-4 text-right text-slate-800">154</td>
-        <td class="py-3 px-4 text-right text-slate-800">R$10.539</td>
-        <td class="py-3 px-4 text-right text-slate-800">R$9.359</td>
-        <td class="py-3 px-4 text-right text-slate-800">R$5.946</td>
-        <td class="py-3 px-4 text-right text-green-600">+R$3.412</td>
+        <td class="py-3 px-4 text-right text-slate-800">155</td>
+        <td class="py-3 px-4 text-right text-slate-800">R$10.618</td>
+        <td class="py-3 px-4 text-right text-slate-800">R$9.429</td>
+        <td class="py-3 px-4 text-right text-slate-800">R$5.990</td>
+        <td class="py-3 px-4 text-right text-green-600">+R$3.439</td>
         <td class="py-3 px-4 text-right text-green-600">1.57x</td>
       </tr></tfoot>
     </table></div>
@@ -397,16 +397,16 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
     </table></div>
     </div>
 
-  <p class="text-center text-xs text-slate-400 pb-4">Atualizado automaticamente todo dia à meia-noite · 20/06/2026 às 10:39 (BRT)</p>
+  <p class="text-center text-xs text-slate-400 pb-4">Atualizado automaticamente todo dia à meia-noite · 20/06/2026 às 12:39 (BRT)</p>
 </div>
 <script>
 var L   = ["01/06", "02/06", "03/06", "04/06", "05/06", "06/06", "07/06", "08/06", "09/06", "10/06", "11/06", "12/06", "13/06", "14/06", "15/06", "16/06", "17/06", "18/06", "19/06", "20/06"];
-var liq = [289.0, 562.0, 456.0, 491.0, 513.0, 200.0, 368.0, 511.0, 425.0, 465.0, 666.0, 329.0, 494.0, 298.0, 565.0, 619.0, 571.0, 525.0, 698.0, 315.0];
-var g   = [287.0, 332.0, 317.0, 253.0, 310.0, 164.0, 274.0, 315.0, 237.0, 297.0, 390.0, 309.0, 265.0, 337.0, 338.0, 425.0, 374.0, 271.0, 333.0, 118.0];
-var lu  = [1.0, 230.0, 139.0, 238.0, 203.0, 37.0, 94.0, 196.0, 188.0, 168.0, 275.0, 20.0, 228.0, -39.0, 227.0, 194.0, 197.0, 254.0, 365.0, 197.0];
-var v   = [5, 10, 8, 7, 10, 3, 5, 11, 7, 7, 10, 6, 8, 4, 9, 11, 8, 8, 12, 5];
+var liq = [289.0, 562.0, 456.0, 491.0, 513.0, 200.0, 368.0, 511.0, 425.0, 465.0, 666.0, 329.0, 494.0, 298.0, 565.0, 619.0, 571.0, 525.0, 698.0, 385.0];
+var g   = [287.0, 332.0, 317.0, 253.0, 310.0, 164.0, 274.0, 315.0, 237.0, 297.0, 390.0, 309.0, 265.0, 337.0, 338.0, 425.0, 374.0, 271.0, 334.0, 161.0];
+var lu  = [1.0, 230.0, 139.0, 238.0, 203.0, 37.0, 94.0, 196.0, 188.0, 168.0, 275.0, 20.0, 228.0, -39.0, 227.0, 194.0, 197.0, 254.0, 364.0, 224.0];
+var v   = [5, 10, 8, 7, 10, 3, 5, 11, 7, 7, 10, 6, 8, 4, 9, 11, 8, 8, 12, 6];
 var wL  = ["Sem 1", "Sem 2", "Sem 3"];
-var wLu = [942.0, 1036.0, 1435.0];
+var wLu = [942.0, 1036.0, 1461.0];
 
 var ac = lu.reduce(function(a,x,i){ a.push((a[i-1]||0)+x); return a; }, []);
 var pt = function(x){ return 'R$'+x.toLocaleString('pt-BR',{maximumFractionDigits:0}); };
