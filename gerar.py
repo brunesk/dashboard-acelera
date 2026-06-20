@@ -378,30 +378,18 @@ weekly_section = f'''<div class="card overflow-hidden">
     </table></div>
     </div>'''
 
-# ── Botão atualizar (token guardado no localStorage do browser, nunca no repo) ─
+# ── Botão atualizar (chama Make.com webhook → Make.com chama GitHub Actions) ───
 _js = (
     'function triggerUpdate(){'
-    'var t=localStorage.getItem("ghDashToken");'
-    'if(!t){t=prompt("Cole seu GitHub Token (fine-grained PAT com actions:write):");'
-    'if(!t)return;localStorage.setItem("ghDashToken",t);}'
     'var b=document.getElementById("btnAtualizar");'
     'b.disabled=true;b.innerHTML="⏳ Iniciando...";'
-    'fetch("https://api.github.com/repos/brunesk/dashboard-acelera/actions/workflows/atualizar.yml/dispatches",'
-    '{"method":"POST","headers":{"Authorization":"Bearer "+t,'
-    '"Accept":"application/vnd.github+json","Content-Type":"application/json"},'
-    '"body":JSON.stringify({"ref":"main"})})'
-    '.then(function(r){'
-    'if(r.status===204){'
+    'fetch("https://hook.us2.make.com/xec8oo29t9nftow0p3qnkcr4aslfnhhr",'
+    '{"method":"POST","headers":{"Content-Type":"application/json"},'
+    '"body":JSON.stringify({"trigger":"dashboard"})})'
+    '.then(function(){'
     'b.innerHTML="✓ Iniciado! Aguarde ~1 min";'
     'b.style.background="rgba(22,163,74,.5)";'
     'setTimeout(function(){b.innerHTML="↻ Atualizar agora";b.style.background="";b.disabled=false;},90000);'
-    '}else if(r.status===401){'
-    'localStorage.removeItem("ghDashToken");'
-    'b.innerHTML="✗ Token inválido — clique para tentar novamente";'
-    'b.style.background="rgba(220,38,38,.5)";b.disabled=false;'
-    '}else{'
-    'b.innerHTML="✗ Erro ("+r.status+") — tente no GitHub";'
-    'b.style.background="rgba(220,38,38,.5)";b.disabled=false;}'
     '}).catch(function(){'
     'b.innerHTML="✗ Erro de conexão";b.disabled=false;});}'
 )
