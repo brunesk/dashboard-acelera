@@ -202,8 +202,8 @@ tb     = sum(h['bruto'] for h in hm_curr_day.values())
 tl     = sum(h['liq']   for h in hm_curr_day.values())
 ts     = sum(m['spend'] for m in meta_curr_day.values())
 tlr    = tl - ts
-roas   = tb/ts if ts>0 else 0
-ticket = tb/tv if tv>0 else 0
+roas   = tl/ts if ts>0 else 0
+ticket = tl/tv if tv>0 else 0
 
 # ── Helpers HTML ──────────────────────────────────────────────────────────────
 def brl(v): return f'R${v:,.0f}'.replace(',','X').replace('.', ',').replace('X','.')
@@ -242,7 +242,7 @@ daily_rows = ''
 for i, d in enumerate(curr_days):
     h = hm_curr_day.get(d, {}); m = meta_curr_day.get(d, {})
     liq=h.get('liq',0); bruto=h.get('bruto',0); gasto=m.get('spend',0)
-    lucro=liq-gasto; roas_d=bruto/gasto if gasto>0 else 0
+    lucro=liq-gasto; roas_d=liq/gasto if gasto>0 else 0
     lc = 'text-green-600' if lucro>=0 else 'text-red-500'
     rc = 'text-green-600' if roas_d>=1.5 else 'text-amber-600' if roas_d>=1.0 else 'text-slate-400'
     daily_rows += f'''<tr class="border-b border-slate-100 hover:bg-slate-50">
@@ -266,7 +266,7 @@ for m in reversed(prev_months):
     tl_m   = hm_m.get('liq', 0.0)
     ts_m   = meta_m.get('spend', 0.0)
     tlr_m  = tl_m - ts_m
-    roas_m = tb_m/ts_m if ts_m>0 else 0
+    roas_m = tl_m/ts_m if ts_m>0 else 0
     lc = 'text-green-600' if tlr_m>=0 else 'text-red-500'
     rc = 'text-green-600' if roas_m>=1.5 else 'text-amber-600' if roas_m>=1.0 else 'text-slate-400'
     total_hv+=tv_m; total_hb+=tb_m; total_hl+=tl_m; total_ms+=ts_m; total_ml+=tlr_m
@@ -280,7 +280,7 @@ for m in reversed(prev_months):
       <td class="py-3 px-4 text-right font-semibold {rc}">{pct_roas(roas_m) if ts_m>0 else "—"}</td>
     </tr>'''
 
-total_roas_hist = total_hb/total_ms if total_ms>0 else 0
+total_roas_hist = total_hl/total_ms if total_ms>0 else 0
 total_lc = 'text-green-600' if total_ml>=0 else 'text-red-500'
 
 # ── Strings de contexto ───────────────────────────────────────────────────────
@@ -293,7 +293,7 @@ if ads_data:
     criativo_section = f'''<div class="card overflow-hidden">
     <div class="px-6 py-5 border-b border-slate-100"><h2 class="text-lg font-bold text-slate-800">Criativos — {periodo_vigente}</h2><p class="text-sm text-slate-400 mt-0.5">Mês vigente · ordenado por investimento · ROAS = atribuição pixel Meta</p></div>
     <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide"><th class="text-left py-3 px-4">Criativo</th><th class="text-center py-3 px-4">Status</th><th class="text-right py-3 px-4">Gasto</th><th class="text-right py-3 px-4">Impressões</th><th class="text-right py-3 px-4">CTR</th><th class="text-right py-3 px-4">CPM</th><th class="text-right py-3 px-4">Compras</th><th class="text-right py-3 px-4">ROAS</th><th class="text-right py-3 px-4">CPA</th></tr></thead><tbody>{ads_rows}</tbody></table></div>
-    <div class="px-6 py-3 bg-slate-50 border-t text-xs text-slate-400">ROAS real mês vigente (Hotmart bruto / Meta gasto): <strong class="text-slate-600">{roas:.2f}x</strong></div>
+    <div class="px-6 py-3 bg-slate-50 border-t text-xs text-slate-400">ROAS real mês vigente (Hotmart líquido / Meta gasto): <strong class="text-slate-600">{roas:.2f}x</strong></div>
     </div>'''
 
 monthly_section = ''
@@ -450,9 +450,9 @@ body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; back
         <p class="text-blue-300 text-xs mt-0.5">mês atual</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
-        <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Rec. Bruta</p>
-        <p class="text-xl font-black">{brl(tb)}</p>
-        <p class="text-blue-300 text-xs mt-0.5">Hotmart</p>
+        <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Rec. Líquida</p>
+        <p class="text-xl font-black">{brl(tl)}</p>
+        <p class="text-blue-300 text-xs mt-0.5">após taxa Hotmart</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Gasto Meta</p>
@@ -467,7 +467,7 @@ body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; back
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">ROAS Real</p>
         <p class="text-3xl font-black">{pct_roas(roas) if roas else "—"}</p>
-        <p class="text-blue-300 text-xs mt-0.5">bruto/gasto</p>
+        <p class="text-blue-300 text-xs mt-0.5">líq/gasto</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Ticket Médio</p>
