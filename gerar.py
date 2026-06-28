@@ -49,11 +49,18 @@ def fetch_meta_daily(token, since, until):
     params = {
         'access_token': token, 'level': 'account', 'time_increment': '1',
         'time_range': json.dumps({'since': since, 'until': until}),
-        'fields': 'date_start,spend,impressions,clicks,ctr,cpm,actions,action_values'
+        'fields': 'date_start,spend,impressions,clicks,ctr,cpm,actions,action_values',
+        'limit': 100,
     }
-    url = f'https://graph.facebook.com/v19.0/{AD_ACCOUNT}/insights?' + urllib.parse.urlencode(params)
+    next_url = f'https://graph.facebook.com/v21.0/{AD_ACCOUNT}/insights?' + urllib.parse.urlencode(params)
     try:
-        with urllib.request.urlopen(url) as r: return json.loads(r.read()).get('data', [])
+        all_data = []
+        while next_url:
+            with urllib.request.urlopen(next_url) as r:
+                resp = json.loads(r.read())
+            all_data.extend(resp.get('data', []))
+            next_url = resp.get('paging', {}).get('next')
+        return all_data
     except urllib.error.HTTPError as e:
         err = json.loads(e.read().decode())
         if 'expired' in err.get('error', {}).get('message', ''):
@@ -61,7 +68,7 @@ def fetch_meta_daily(token, since, until):
         return None
 
 def fetch_meta_ads(token, since, until):
-    url = f'https://graph.facebook.com/v19.0/{ADSET_ID}/ads?fields=id,name,status&access_token={token}'
+    url = f'https://graph.facebook.com/v21.0/{ADSET_ID}/ads?fields=id,name,status&access_token={token}'
     try:
         with urllib.request.urlopen(url) as r: ads = json.loads(r.read()).get('data', [])
     except: return None
@@ -73,7 +80,7 @@ def fetch_meta_ads(token, since, until):
             'fields': 'spend,impressions,clicks,ctr,cpm,cpc,actions,action_values'
         })
         try:
-            with urllib.request.urlopen(f'https://graph.facebook.com/v19.0/{ad["id"]}/insights?{params}') as r:
+            with urllib.request.urlopen(f'https://graph.facebook.com/v21.0/{ad["id"]}/insights?{params}') as r:
                 ins = json.loads(r.read()).get('data', [])
         except: ins = []
         if ins:
