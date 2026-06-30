@@ -11,6 +11,8 @@
 * { box-sizing:border-box }
 body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f8fafc }
 .card { background:white; border-radius:16px; box-shadow:0 1px 3px rgba(0,0,0,.07); border:1px solid #f1f5f9 }
+#monthSel { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); border-radius:8px; color:white; padding:4px 8px; font-size:13px; font-weight:600; cursor:pointer }
+#monthSel option { background:#1e3a8a; color:white }
 </style>
 </head>
 <body class="min-h-screen">
@@ -25,47 +27,53 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
           </div>
           <div>
             <h1 class="text-xl font-black tracking-tight">Acelera Shopee</h1>
-            <p class="text-blue-300 text-[11px]">Mês vigente: 01/06 – 29/06/2026</p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <p class="text-blue-300 text-[11px]" id="periodo-header">01/06 – 29/06/2026</p>
+              <select id="monthSel" onchange="switchMonth(this.value)"><option value="2026-06" selected>Jun/2026 ← Atual</option>
+<option value="2026-05" >Mai/2026</option>
+</select>
+            </div>
           </div>
         </div>
       </div>
       <div class="text-right flex flex-col items-end gap-1">
         <div class="inline-flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-xs text-blue-200">
           <span class="w-1.5 h-1.5 bg-green-400 rounded-full inline-block"></span>
-          Atualizado 29/06/2026 às 21:00 (BRT)
+          Atualizado 29/06/2026 às 23:19 (BRT)
         </div>
-        <button id="btnAtualizar" onclick="triggerUpdate()" style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600;color:white;cursor:pointer;transition:background .2s">↻ Atualizar agora</button><script>function triggerUpdate(){var b=document.getElementById("btnAtualizar");b.disabled=true;b.innerHTML="⏳ Iniciando...";fetch("https://hook.us2.make.com/xec8oo29t9nftow0p3qnkcr4aslfnhhr",{"method":"POST","headers":{"Content-Type":"application/json"},"body":JSON.stringify({"trigger":"dashboard"})}).then(function(){b.innerHTML="✓ Iniciado! Aguarde ~1 min";b.style.background="rgba(22,163,74,.5)";setTimeout(function(){b.innerHTML="↻ Atualizar agora";b.style.background="";b.disabled=false;},90000);}).catch(function(){b.innerHTML="✗ Erro de conexão";b.disabled=false;});}</script>
+        <div class="text-[10px] text-blue-300 mt-0.5" id="autoRefreshStatus">carregando...</div>
+        <button id="btnAtualizar" onclick="triggerUpdate(false)" style="margin-top:4px;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600;color:white;cursor:pointer;transition:background .2s">↻ Atualizar agora</button>
       </div>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Vendas</p>
-        <p class="text-3xl font-black">249</p>
-        <p class="text-blue-300 text-xs mt-0.5">mês atual</p>
+        <p class="text-3xl font-black" id="kpi-vendas">249</p>
+        <p class="text-blue-300 text-xs mt-0.5">mês selecionado</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Rec. Líquida</p>
-        <p class="text-xl font-black">R$15.324</p>
+        <p class="text-xl font-black" id="kpi-liq">R$15.324</p>
         <p class="text-blue-300 text-xs mt-0.5">após taxa Hotmart</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Gasto Meta</p>
-        <p class="text-xl font-black">R$10.068</p>
+        <p class="text-xl font-black" id="kpi-meta">R$10.086</p>
         <p class="text-blue-300 text-xs mt-0.5">investido</p>
       </div>
-      <div class="bg-green-400/30 border-green-300/40 rounded-2xl p-3.5 border">
+      <div class="bg-green-400/30 border-green-300/40 rounded-2xl p-3.5 border" id="kpi-lucro-card">
         <p class="text-green-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Lucro Real</p>
-        <p class="text-xl font-black text-green-300">+R$5.256</p>
-        <p class="text-green-300 text-xs mt-0.5">R$181/dia</p>
+        <p class="text-xl font-black text-green-300" id="kpi-lucro">+R$5.238</p>
+        <p class="text-green-300 text-xs mt-0.5" id="kpi-lucro-dia">R$181/dia</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">ROAS Real</p>
-        <p class="text-3xl font-black">1.52x</p>
+        <p class="text-3xl font-black" id="kpi-roas">1.52x</p>
         <p class="text-blue-300 text-xs mt-0.5">líq/gasto</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Ticket Médio</p>
-        <p class="text-xl font-black">R$62</p>
+        <p class="text-xl font-black" id="kpi-ticket">R$62</p>
         <p class="text-blue-300 text-xs mt-0.5">por venda</p>
       </div>
     </div>
@@ -75,10 +83,10 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
 <div class="max-w-6xl mx-auto px-4 py-6 md:px-6 space-y-5">
   
 
-  <!-- Gráficos mês vigente -->
+  <!-- Gráficos -->
   <div class="card p-5">
     <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
-      <div><h2 class="font-bold text-slate-800">Desempenho Diário — Mês Vigente</h2><p class="text-xs text-slate-400 mt-0.5">Receita Líq. HM vs Gasto Meta vs Lucro</p></div>
+      <div><h2 class="font-bold text-slate-800">Desempenho Diário</h2><p class="text-xs text-slate-400 mt-0.5">Receita Líq. HM vs Gasto Meta vs Lucro</p></div>
       <div class="flex items-center gap-4 text-xs text-slate-500">
         <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block bg-blue-500"></span>Rec. Líq.</span>
         <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block bg-red-400"></span>Meta</span>
@@ -91,12 +99,12 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
   <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
     <div class="card p-5">
       <h2 class="font-bold text-slate-800 mb-0.5">Vendas / Dia</h2>
-      <p class="text-xs text-slate-400 mb-4">Compras no Hotmart — mês vigente</p>
+      <p class="text-xs text-slate-400 mb-4">Compras no Hotmart</p>
       <div style="height:170px"><canvas id="cVendas"></canvas></div>
     </div>
     <div class="card p-5">
       <h2 class="font-bold text-slate-800 mb-0.5">Lucro Acumulado</h2>
-      <p class="text-xs text-slate-400 mb-4">Progressão no mês vigente</p>
+      <p class="text-xs text-slate-400 mb-4">Progressão no mês</p>
       <div style="height:170px"><canvas id="cAcum"></canvas></div>
     </div>
   </div>
@@ -104,7 +112,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
   <div class="card overflow-hidden">
     <div class="px-6 py-5 border-b border-slate-100">
       <h2 class="text-lg font-bold text-slate-800">Desempenho Semanal</h2>
-      <p class="text-sm text-slate-400 mt-0.5">Mês vigente · semanas de 7 dias a partir do dia 01</p>
+      <p class="text-sm text-slate-400 mt-0.5">Semanas de 7 dias a partir do dia 01</p>
     </div>
     <div class="px-5 pt-5 pb-1" style="height:130px"><canvas id="cSemanal"></canvas></div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
@@ -118,17 +126,17 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
         <th class="text-right py-3 px-4">Lucro</th>
         <th class="text-right py-3 px-4">ROAS</th>
       </tr></thead>
-      <tbody><tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-3 px-4 font-semibold text-slate-700">Semana 1</td><td class="py-3 px-4 text-slate-400 text-xs">01/06 – 07/06</td><td class="py-3 px-4 text-right text-slate-600">48</td><td class="py-3 px-4 text-right text-slate-600">R$3.241</td><td class="py-3 px-4 text-right text-slate-600">R$2.879</td><td class="py-3 px-4 text-right text-slate-600">R$1.937</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$942</td><td class="py-3 px-4 text-right font-semibold text-green-600">1.67x</td></tr><tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-3 px-4 font-semibold text-slate-700">Semana 2</td><td class="py-3 px-4 text-slate-400 text-xs">08/06 – 14/06</td><td class="py-3 px-4 text-right text-slate-600">53</td><td class="py-3 px-4 text-right text-slate-600">R$3.586</td><td class="py-3 px-4 text-right text-slate-600">R$3.186</td><td class="py-3 px-4 text-right text-slate-600">R$2.151</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$1.036</td><td class="py-3 px-4 text-right font-semibold text-green-600">1.67x</td></tr><tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-3 px-4 font-semibold text-slate-700">Semana 3</td><td class="py-3 px-4 text-slate-400 text-xs">15/06 – 21/06</td><td class="py-3 px-4 text-right text-slate-600">70</td><td class="py-3 px-4 text-right text-slate-600">R$4.830</td><td class="py-3 px-4 text-right text-slate-600">R$4.287</td><td class="py-3 px-4 text-right text-slate-600">R$2.615</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$1.672</td><td class="py-3 px-4 text-right font-semibold text-green-600">1.85x</td></tr><tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-3 px-4 font-semibold text-slate-700">Semana 4</td><td class="py-3 px-4 text-slate-400 text-xs">22/06 – 28/06</td><td class="py-3 px-4 text-right text-slate-600">70</td><td class="py-3 px-4 text-right text-slate-600">R$5.083</td><td class="py-3 px-4 text-right text-slate-600">R$4.518</td><td class="py-3 px-4 text-right text-slate-600">R$3.023</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$1.495</td><td class="py-3 px-4 text-right font-semibold text-green-600">1.68x</td></tr><tr class="border-b border-slate-100 hover:bg-slate-50 bg-blue-50/40"><td class="py-3 px-4 font-semibold text-slate-700">Semana 5 <span class="text-[10px] bg-blue-100 text-blue-600 rounded-full px-1.5 py-0.5 ml-1 font-semibold">atual</span></td><td class="py-3 px-4 text-slate-400 text-xs">29/06 – 29/06</td><td class="py-3 px-4 text-right text-slate-600">8</td><td class="py-3 px-4 text-right text-slate-600">R$512</td><td class="py-3 px-4 text-right text-slate-600">R$453</td><td class="py-3 px-4 text-right text-slate-600">R$342</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$111</td><td class="py-3 px-4 text-right font-semibold text-amber-600">1.50x</td></tr></tbody>
+      <tbody id="weekly-tbody"><tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-3 px-4 font-semibold text-slate-700">Semana 1</td><td class="py-3 px-4 text-slate-400 text-xs">01/06 – 07/06</td><td class="py-3 px-4 text-right text-slate-600">48</td><td class="py-3 px-4 text-right text-slate-600">R$3.241</td><td class="py-3 px-4 text-right text-slate-600">R$2.879</td><td class="py-3 px-4 text-right text-slate-600">R$1.937</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$942</td><td class="py-3 px-4 text-right font-semibold text-green-600">1.67x</td></tr><tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-3 px-4 font-semibold text-slate-700">Semana 2</td><td class="py-3 px-4 text-slate-400 text-xs">08/06 – 14/06</td><td class="py-3 px-4 text-right text-slate-600">53</td><td class="py-3 px-4 text-right text-slate-600">R$3.586</td><td class="py-3 px-4 text-right text-slate-600">R$3.186</td><td class="py-3 px-4 text-right text-slate-600">R$2.151</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$1.036</td><td class="py-3 px-4 text-right font-semibold text-green-600">1.67x</td></tr><tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-3 px-4 font-semibold text-slate-700">Semana 3</td><td class="py-3 px-4 text-slate-400 text-xs">15/06 – 21/06</td><td class="py-3 px-4 text-right text-slate-600">70</td><td class="py-3 px-4 text-right text-slate-600">R$4.830</td><td class="py-3 px-4 text-right text-slate-600">R$4.287</td><td class="py-3 px-4 text-right text-slate-600">R$2.615</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$1.672</td><td class="py-3 px-4 text-right font-semibold text-green-600">1.85x</td></tr><tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-3 px-4 font-semibold text-slate-700">Semana 4</td><td class="py-3 px-4 text-slate-400 text-xs">22/06 – 28/06</td><td class="py-3 px-4 text-right text-slate-600">70</td><td class="py-3 px-4 text-right text-slate-600">R$5.083</td><td class="py-3 px-4 text-right text-slate-600">R$4.518</td><td class="py-3 px-4 text-right text-slate-600">R$3.023</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$1.495</td><td class="py-3 px-4 text-right font-semibold text-green-600">1.68x</td></tr><tr class="border-b border-slate-100 hover:bg-slate-50 bg-blue-50/40"><td class="py-3 px-4 font-semibold text-slate-700">Semana 5 <span class="text-[10px] bg-blue-100 text-blue-600 rounded-full px-1.5 py-0.5 ml-1 font-semibold">atual</span></td><td class="py-3 px-4 text-slate-400 text-xs">29/06 – 29/06</td><td class="py-3 px-4 text-right text-slate-600">8</td><td class="py-3 px-4 text-right text-slate-600">R$512</td><td class="py-3 px-4 text-right text-slate-600">R$453</td><td class="py-3 px-4 text-right text-slate-600">R$360</td><td class="py-3 px-4 text-right font-bold text-green-600">+R$93</td><td class="py-3 px-4 text-right font-semibold text-amber-600">1.42x</td></tr></tbody>
     </table></div>
     </div>
 
   <div class="card overflow-hidden">
-    <div class="px-6 py-5 border-b border-slate-100"><h2 class="text-lg font-bold text-slate-800">Criativos — 01/06 – 29/06/2026</h2><p class="text-sm text-slate-400 mt-0.5">Mês vigente · ordenado por investimento · ROAS = atribuição pixel Meta</p></div>
+    <div class="px-6 py-5 border-b border-slate-100"><h2 class="text-lg font-bold text-slate-800">Criativos — <span id="periodo-criativos">01/06 – 29/06/2026</span></h2><p class="text-sm text-slate-400 mt-0.5">Mês vigente · ordenado por investimento · ROAS = atribuição pixel Meta</p></div>
     <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide"><th class="text-left py-3 px-4">Criativo</th><th class="text-center py-3 px-4">Status</th><th class="text-right py-3 px-4">Gasto</th><th class="text-right py-3 px-4">Impressões</th><th class="text-right py-3 px-4">CTR</th><th class="text-right py-3 px-4">CPM</th><th class="text-right py-3 px-4">Compras</th><th class="text-right py-3 px-4">ROAS</th><th class="text-right py-3 px-4">CPA</th></tr></thead><tbody><tr class="border-b border-slate-100 hover:bg-slate-50">
           <td class="py-3 px-4"><div class="flex items-center gap-2"><span>🥇</span><div><p class="font-semibold text-slate-800 text-sm">Video 05 — Cópia</p><div class="mt-1 h-1 bg-slate-100 rounded-full w-32"><div class="h-full rounded-full bg-blue-400" style="width:100%"></div></div></div></div></td>
           <td class="py-3 px-4 text-center"><span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#dcfce7;color:#16a34a">ACTIVE</span></td>
           <td class="py-3 px-4 text-right font-semibold text-slate-700">R$4.786</td>
-          <td class="py-3 px-4 text-right text-slate-600">183,998</td>
+          <td class="py-3 px-4 text-right text-slate-600">184,019</td>
           <td class="py-3 px-4 text-right text-slate-600">2.3%</td>
           <td class="py-3 px-4 text-right text-slate-600">R$26</td>
           <td class="py-3 px-4 text-right text-slate-600">106</td>
@@ -137,28 +145,28 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
         </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
           <td class="py-3 px-4"><div class="flex items-center gap-2"><span>🥈</span><div><p class="font-semibold text-slate-800 text-sm">Video 04 — Cópia</p><div class="mt-1 h-1 bg-slate-100 rounded-full w-32"><div class="h-full rounded-full bg-blue-400" style="width:41%"></div></div></div></div></td>
           <td class="py-3 px-4 text-center"><span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#dcfce7;color:#16a34a">ACTIVE</span></td>
-          <td class="py-3 px-4 text-right font-semibold text-slate-700">R$1.991</td>
-          <td class="py-3 px-4 text-right text-slate-600">92,487</td>
+          <td class="py-3 px-4 text-right font-semibold text-slate-700">R$2.002</td>
+          <td class="py-3 px-4 text-right text-slate-600">92,942</td>
           <td class="py-3 px-4 text-right text-slate-600">2.1%</td>
           <td class="py-3 px-4 text-right text-slate-600">R$22</td>
           <td class="py-3 px-4 text-right text-slate-600">52</td>
-          <td class="py-3 px-4 text-right font-bold" style="color:#ca8a04">1.49x</td>
+          <td class="py-3 px-4 text-right font-bold" style="color:#ca8a04">1.48x</td>
           <td class="py-3 px-4 text-right text-slate-600">R$38</td>
         </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
           <td class="py-3 px-4"><div class="flex items-center gap-2"><span>🥉</span><div><p class="font-semibold text-slate-800 text-sm">Video 01 — Cópia</p><div class="mt-1 h-1 bg-slate-100 rounded-full w-32"><div class="h-full rounded-full bg-blue-400" style="width:40%"></div></div></div></div></td>
           <td class="py-3 px-4 text-center"><span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#dcfce7;color:#16a34a">ACTIVE</span></td>
-          <td class="py-3 px-4 text-right font-semibold text-slate-700">R$1.928</td>
-          <td class="py-3 px-4 text-right text-slate-600">67,148</td>
+          <td class="py-3 px-4 text-right font-semibold text-slate-700">R$1.933</td>
+          <td class="py-3 px-4 text-right text-slate-600">67,297</td>
           <td class="py-3 px-4 text-right text-slate-600">2.6%</td>
           <td class="py-3 px-4 text-right text-slate-600">R$29</td>
           <td class="py-3 px-4 text-right text-slate-600">41</td>
-          <td class="py-3 px-4 text-right font-bold" style="color:#ca8a04">1.31x</td>
+          <td class="py-3 px-4 text-right font-bold" style="color:#ca8a04">1.30x</td>
           <td class="py-3 px-4 text-right text-slate-600">R$47</td>
         </tr><tr class="border-b border-slate-100 hover:bg-slate-50">
           <td class="py-3 px-4"><div class="flex items-center gap-2"><span>4º</span><div><p class="font-semibold text-slate-800 text-sm">Criativo 03 — Cópia</p><div class="mt-1 h-1 bg-slate-100 rounded-full w-32"><div class="h-full rounded-full bg-blue-400" style="width:24%"></div></div></div></div></td>
           <td class="py-3 px-4 text-center"><span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#dcfce7;color:#16a34a">ACTIVE</span></td>
           <td class="py-3 px-4 text-right font-semibold text-slate-700">R$1.177</td>
-          <td class="py-3 px-4 text-right text-slate-600">39,394</td>
+          <td class="py-3 px-4 text-right text-slate-600">39,397</td>
           <td class="py-3 px-4 text-right text-slate-600">1.9%</td>
           <td class="py-3 px-4 text-right text-slate-600">R$30</td>
           <td class="py-3 px-4 text-right text-slate-600">25</td>
@@ -178,9 +186,9 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
     <div class="px-6 py-3 bg-slate-50 border-t text-xs text-slate-400">ROAS real mês vigente (Hotmart líquido / Meta gasto): <strong class="text-slate-600">1.52x</strong></div>
     </div>
 
-  <!-- Tabela dia a dia mês vigente -->
+  <!-- Tabela dia a dia -->
   <div class="card overflow-hidden">
-    <div class="px-6 py-5 border-b border-slate-100"><h2 class="text-lg font-bold text-slate-800">Dia a Dia — Mês Vigente</h2></div>
+    <div class="px-6 py-5 border-b border-slate-100"><h2 class="text-lg font-bold text-slate-800">Dia a Dia</h2></div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
       <thead><tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
         <th class="text-left py-3 px-4">Dia</th><th class="text-right py-3 px-4">Vendas</th>
@@ -188,7 +196,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
         <th class="text-right py-3 px-4">Gasto Meta</th><th class="text-right py-3 px-4">Lucro</th>
         <th class="text-right py-3 px-4">ROAS</th>
       </tr></thead>
-      <tbody><tr class="border-b border-slate-100 hover:bg-slate-50">
+      <tbody id="daily-tbody"><tr class="border-b border-slate-100 hover:bg-slate-50">
       <td class="py-3 px-4 font-semibold text-slate-700">01/06</td>
       <td class="py-3 px-4 text-right text-slate-600">5</td>
       <td class="py-3 px-4 text-right text-slate-600">R$325</td>
@@ -417,17 +425,17 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
       <td class="py-3 px-4 text-right text-slate-600">8</td>
       <td class="py-3 px-4 text-right text-slate-600">R$512</td>
       <td class="py-3 px-4 text-right text-slate-600">R$453</td>
-      <td class="py-3 px-4 text-right text-slate-600">R$342</td>
-      <td class="py-3 px-4 text-right font-bold text-green-600">+R$111</td>
-      <td class="py-3 px-4 text-right font-semibold text-amber-600">1.32x</td>
+      <td class="py-3 px-4 text-right text-slate-600">R$360</td>
+      <td class="py-3 px-4 text-right font-bold text-green-600">+R$93</td>
+      <td class="py-3 px-4 text-right font-semibold text-amber-600">1.26x</td>
     </tr></tbody>
-      <tfoot><tr class="bg-slate-50 font-bold border-t-2 border-slate-200">
+      <tfoot id="daily-tfoot"><tr class="bg-slate-50 font-bold border-t-2 border-slate-200">
         <td class="py-3 px-4 text-slate-800">TOTAL MÊS</td>
         <td class="py-3 px-4 text-right text-slate-800">249</td>
         <td class="py-3 px-4 text-right text-slate-800">R$17.252</td>
         <td class="py-3 px-4 text-right text-slate-800">R$15.324</td>
-        <td class="py-3 px-4 text-right text-slate-800">R$10.068</td>
-        <td class="py-3 px-4 text-right text-green-600">+R$5.256</td>
+        <td class="py-3 px-4 text-right text-slate-800">R$10.086</td>
+        <td class="py-3 px-4 text-right text-green-600">+R$5.238</td>
         <td class="py-3 px-4 text-right text-green-600">1.52x</td>
       </tr></tfoot>
     </table></div>
@@ -469,21 +477,28 @@ body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; backg
     </table></div>
     </div>
 
-  <p class="text-center text-xs text-slate-400 pb-4">Atualizado automaticamente todo dia à meia-noite · 29/06/2026 às 21:00 (BRT)</p>
+  <p class="text-center text-xs text-slate-400 pb-4">Atualizado automaticamente a cada hora · 29/06/2026 às 23:19 (BRT)</p>
 </div>
 <script>
+var ALL_DATA = {"2026-05": {"2026-05-01": {"hv": 0, "hb": 0, "hl": 0, "ms": 280.21, "mp": 15}, "2026-05-02": {"hv": 0, "hb": 0, "hl": 0, "ms": 214.09, "mp": 6}, "2026-05-03": {"hv": 0, "hb": 0, "hl": 0, "ms": 474.3, "mp": 8}, "2026-05-04": {"hv": 0, "hb": 0, "hl": 0, "ms": 329.23, "mp": 10}, "2026-05-05": {"hv": 0, "hb": 0, "hl": 0, "ms": 291.88, "mp": 4}, "2026-05-06": {"hv": 0, "hb": 0, "hl": 0, "ms": 21.33, "mp": 1}, "2026-05-07": {"hv": 0, "hb": 0, "hl": 0, "ms": 0.01, "mp": 0}, "2026-05-08": {"hv": 0, "hb": 0, "hl": 0, "ms": 0.0, "mp": 0}, "2026-05-09": {"hv": 0, "hb": 0, "hl": 0, "ms": 276.92, "mp": 4}, "2026-05-10": {"hv": 0, "hb": 0, "hl": 0, "ms": 272.4, "mp": 11}, "2026-05-11": {"hv": 0, "hb": 0, "hl": 0, "ms": 278.48, "mp": 5}, "2026-05-12": {"hv": 0, "hb": 0, "hl": 0, "ms": 283.85, "mp": 5}, "2026-05-13": {"hv": 0, "hb": 0, "hl": 0, "ms": 414.22, "mp": 10}, "2026-05-14": {"hv": 0, "hb": 0, "hl": 0, "ms": 465.35, "mp": 22}, "2026-05-15": {"hv": 0, "hb": 0, "hl": 0, "ms": 346.44, "mp": 11}, "2026-05-16": {"hv": 0, "hb": 0, "hl": 0, "ms": 318.15, "mp": 7}, "2026-05-17": {"hv": 0, "hb": 0, "hl": 0, "ms": 463.19, "mp": 11}, "2026-05-18": {"hv": 0, "hb": 0, "hl": 0, "ms": 430.81, "mp": 12}, "2026-05-19": {"hv": 0, "hb": 0, "hl": 0, "ms": 409.78, "mp": 7}, "2026-05-20": {"hv": 0, "hb": 0, "hl": 0, "ms": 358.58, "mp": 7}, "2026-05-21": {"hv": 0, "hb": 0, "hl": 0, "ms": 366.91, "mp": 7}, "2026-05-22": {"hv": 0, "hb": 0, "hl": 0, "ms": 384.5, "mp": 3}, "2026-05-23": {"hv": 0, "hb": 0, "hl": 0, "ms": 591.75, "mp": 19}, "2026-05-24": {"hv": 0, "hb": 0, "hl": 0, "ms": 662.15, "mp": 7}, "2026-05-25": {"hv": 0, "hb": 0, "hl": 0, "ms": 574.04, "mp": 5}, "2026-05-26": {"hv": 0, "hb": 0, "hl": 0, "ms": 544.28, "mp": 6}, "2026-05-27": {"hv": 0, "hb": 0, "hl": 0, "ms": 263.41, "mp": 2}, "2026-05-28": {"hv": 0, "hb": 0, "hl": 0, "ms": 194.69, "mp": 4}, "2026-05-29": {"hv": 2, "hb": 158.0, "hl": 140.36, "ms": 191.99, "mp": 2}, "2026-05-30": {"hv": 2, "hb": 158.0, "hl": 140.36, "ms": 159.0, "mp": 3}, "2026-05-31": {"hv": 4, "hb": 236.0, "hl": 208.64, "ms": 213.47, "mp": 2}}, "2026-06": {"2026-06-01": {"hv": 5, "hb": 324.92, "hl": 288.74, "ms": 287.31, "mp": 8}, "2026-06-02": {"hv": 10, "hb": 634.16, "hl": 561.8, "ms": 331.6, "mp": 9}, "2026-06-03": {"hv": 8, "hb": 513.44, "hl": 455.75, "ms": 316.96, "mp": 8}, "2026-06-04": {"hv": 7, "hb": 553.0, "hl": 491.26, "ms": 252.94, "mp": 7}, "2026-06-05": {"hv": 10, "hb": 580.0, "hl": 512.59, "ms": 309.91, "mp": 8}, "2026-06-06": {"hv": 3, "hb": 222.92, "hl": 200.42, "ms": 163.75, "mp": 5}, "2026-06-07": {"hv": 5, "hb": 412.47, "hl": 368.37, "ms": 274.3, "mp": 5}, "2026-06-08": {"hv": 11, "hb": 579.0, "hl": 510.69, "ms": 314.7, "mp": 9}, "2026-06-09": {"hv": 7, "hb": 478.57, "hl": 424.75, "ms": 237.11, "mp": 5}, "2026-06-10": {"hv": 7, "hb": 522.92, "hl": 465.14, "ms": 297.36, "mp": 8}, "2026-06-11": {"hv": 10, "hb": 745.83, "hl": 665.55, "ms": 390.23, "mp": 9}, "2026-06-12": {"hv": 6, "hb": 369.64, "hl": 328.6, "ms": 309.04, "mp": 5}, "2026-06-13": {"hv": 8, "hb": 556.16, "hl": 493.52, "ms": 265.07, "mp": 8}, "2026-06-14": {"hv": 4, "hb": 333.47, "hl": 298.19, "ms": 337.22, "mp": 4}, "2026-06-15": {"hv": 9, "hb": 636.57, "hl": 565.11, "ms": 338.04, "mp": 9}, "2026-06-16": {"hv": 11, "hb": 699.0, "hl": 618.81, "ms": 424.65, "mp": 7}, "2026-06-17": {"hv": 7, "hb": 562.92, "hl": 501.18, "ms": 374.01, "mp": 8}, "2026-06-18": {"hv": 8, "hb": 592.0, "hl": 525.4, "ms": 271.23, "mp": 6}, "2026-06-19": {"hv": 12, "hb": 788.0, "hl": 698.0, "ms": 333.68, "mp": 12}, "2026-06-20": {"hv": 18, "hb": 1212.0, "hl": 1074.03, "ms": 452.68, "mp": 15}, "2026-06-21": {"hv": 5, "hb": 339.94, "hl": 304.75, "ms": 420.53, "mp": 4}, "2026-06-22": {"hv": 8, "hb": 647.32, "hl": 576.76, "ms": 406.74, "mp": 8}, "2026-06-23": {"hv": 17, "hb": 1268.57, "hl": 1126.55, "ms": 464.25, "mp": 16}, "2026-06-24": {"hv": 9, "hb": 638.47, "hl": 568.0, "ms": 396.29, "mp": 8}, "2026-06-25": {"hv": 11, "hb": 724.6, "hl": 643.42, "ms": 425.72, "mp": 10}, "2026-06-26": {"hv": 6, "hb": 434.0, "hl": 385.04, "ms": 276.29, "mp": 5}, "2026-06-27": {"hv": 13, "hb": 1011.47, "hl": 900.77, "ms": 600.18, "mp": 8}, "2026-06-28": {"hv": 6, "hb": 358.2, "hl": 317.16, "ms": 453.49, "mp": 7}, "2026-06-29": {"hv": 8, "hb": 512.0, "hl": 453.32, "ms": 360.48, "mp": 4}}};
+var CURR_M   = "2026-06";
+var GEN_TS   = 1782785969869;
+var TODAY_DAY = 29;
 var L   = ["01/06", "02/06", "03/06", "04/06", "05/06", "06/06", "07/06", "08/06", "09/06", "10/06", "11/06", "12/06", "13/06", "14/06", "15/06", "16/06", "17/06", "18/06", "19/06", "20/06", "21/06", "22/06", "23/06", "24/06", "25/06", "26/06", "27/06", "28/06", "29/06"];
 var liq = [289.0, 562.0, 456.0, 491.0, 513.0, 200.0, 368.0, 511.0, 425.0, 465.0, 666.0, 329.0, 494.0, 298.0, 565.0, 619.0, 501.0, 525.0, 698.0, 1074.0, 305.0, 577.0, 1127.0, 568.0, 643.0, 385.0, 901.0, 317.0, 453.0];
-var g   = [287.0, 332.0, 317.0, 253.0, 310.0, 164.0, 274.0, 315.0, 237.0, 297.0, 390.0, 309.0, 265.0, 337.0, 338.0, 425.0, 374.0, 271.0, 334.0, 453.0, 421.0, 407.0, 464.0, 396.0, 426.0, 276.0, 600.0, 453.0, 342.0];
-var lu  = [1.0, 230.0, 139.0, 238.0, 203.0, 37.0, 94.0, 196.0, 188.0, 168.0, 275.0, 20.0, 228.0, -39.0, 227.0, 194.0, 127.0, 254.0, 364.0, 621.0, -116.0, 170.0, 662.0, 172.0, 218.0, 109.0, 301.0, -136.0, 111.0];
+var g   = [287.0, 332.0, 317.0, 253.0, 310.0, 164.0, 274.0, 315.0, 237.0, 297.0, 390.0, 309.0, 265.0, 337.0, 338.0, 425.0, 374.0, 271.0, 334.0, 453.0, 421.0, 407.0, 464.0, 396.0, 426.0, 276.0, 600.0, 453.0, 360.0];
+var lu  = [1.0, 230.0, 139.0, 238.0, 203.0, 37.0, 94.0, 196.0, 188.0, 168.0, 275.0, 20.0, 228.0, -39.0, 227.0, 194.0, 127.0, 254.0, 364.0, 621.0, -116.0, 170.0, 662.0, 172.0, 218.0, 109.0, 301.0, -136.0, 93.0];
 var v   = [5, 10, 8, 7, 10, 3, 5, 11, 7, 7, 10, 6, 8, 4, 9, 11, 7, 8, 12, 18, 5, 8, 17, 9, 11, 6, 13, 6, 8];
 var wL  = ["Sem 1", "Sem 2", "Sem 3", "Sem 4", "Sem 5"];
-var wLu = [942.0, 1036.0, 1672.0, 1495.0, 111.0];
+var wLu = [942.0, 1036.0, 1672.0, 1495.0, 93.0];
 
 var ac = lu.reduce(function(a,x,i){ a.push((a[i-1]||0)+x); return a; }, []);
-var pt = function(x){ return 'R$'+x.toLocaleString('pt-BR',{maximumFractionDigits:0}); };
+var pt = function(x){ return 'R$'+Math.round(x).toLocaleString('pt-BR',{maximumFractionDigits:0}); };
+var pR = function(x){ return x.toFixed(2)+'x'; };
 
-new Chart(document.getElementById('cDiario'), {
+var charts = {};
+
+charts.diario = new Chart(document.getElementById('cDiario'), {
   data: { labels: L, datasets: [
     {type:'line', label:'Rec. Líq.',  data:liq, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.08)', fill:true, tension:.4, pointRadius:3, borderWidth:2.5},
     {type:'line', label:'Gasto Meta', data:g,   borderColor:'#f87171', backgroundColor:'rgba(248,113,113,.08)', fill:true, tension:.4, pointRadius:3, borderWidth:2.5},
@@ -495,7 +510,7 @@ new Chart(document.getElementById('cDiario'), {
   }
 });
 
-new Chart(document.getElementById('cVendas'), {
+charts.vendas = new Chart(document.getElementById('cVendas'), {
   type: 'bar',
   data: { labels: L, datasets: [{data:v, backgroundColor:'#bfdbfe', borderColor:'#3b82f6', borderWidth:1.5, borderRadius:5}] },
   options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
@@ -503,7 +518,7 @@ new Chart(document.getElementById('cVendas'), {
   }
 });
 
-new Chart(document.getElementById('cAcum'), {
+charts.acum = new Chart(document.getElementById('cAcum'), {
   type: 'line',
   data: { labels: L, datasets: [{data:ac, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,.1)', fill:true, tension:.4, pointRadius:3, borderWidth:2.5}] },
   options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
@@ -512,7 +527,7 @@ new Chart(document.getElementById('cAcum'), {
 });
 
 if (document.getElementById('cSemanal')) {
-  new Chart(document.getElementById('cSemanal'), {
+  charts.semanal = new Chart(document.getElementById('cSemanal'), {
     type: 'bar',
     data: { labels: wL, datasets: [{
       data: wLu,
@@ -524,6 +539,178 @@ if (document.getElementById('cSemanal')) {
     }
   });
 }
+
+// ── Seletor de mês ────────────────────────────────────────────────────────────
+function switchMonth(m) {
+  var mData = ALL_DATA[m];
+  if (!mData) return;
+  var days = Object.keys(mData).sort();
+  var labels = days.map(function(d){ return d.slice(8)+'/'+d.slice(5,7); });
+  var hl = days.map(function(d){ return mData[d].hl; });
+  var ms = days.map(function(d){ return mData[d].ms; });
+  var lu2 = days.map(function(d){ return mData[d].hl - mData[d].ms; });
+  var vv  = days.map(function(d){ return mData[d].hv; });
+  var ac2 = lu2.reduce(function(a,x,i){ a.push((a[i-1]||0)+x); return a; }, []);
+
+  var tv2 = days.reduce(function(s,d){ return s+mData[d].hv; }, 0);
+  var tb2 = days.reduce(function(s,d){ return s+mData[d].hb; }, 0);
+  var tl2 = days.reduce(function(s,d){ return s+mData[d].hl; }, 0);
+  var ts2 = days.reduce(function(s,d){ return s+mData[d].ms; }, 0);
+  var tlr2= tl2 - ts2;
+  var roas2 = ts2 > 0 ? tl2/ts2 : 0;
+  var tick2 = tv2 > 0 ? tl2/tv2 : 0;
+
+  // KPIs
+  document.getElementById('kpi-vendas').textContent = tv2;
+  document.getElementById('kpi-liq').textContent = pt(tl2);
+  document.getElementById('kpi-meta').textContent = ts2 > 0 ? pt(ts2) : '—';
+  document.getElementById('kpi-lucro').textContent = (tlr2>=0?'+':'')+pt(tlr2);
+  document.getElementById('kpi-lucro-dia').textContent = days.length ? pt(tlr2/days.length)+'/dia' : '';
+  document.getElementById('kpi-roas').textContent = roas2 > 0 ? pR(roas2) : '—';
+  document.getElementById('kpi-ticket').textContent = pt(tick2);
+
+  // Período
+  var p1 = days[0] ? days[0].slice(8)+'/'+days[0].slice(5,7) : '';
+  var p2 = days[days.length-1] ? days[days.length-1].slice(8)+'/'+days[days.length-1].slice(5,7)+'/'+days[days.length-1].slice(0,4) : '';
+  document.getElementById('periodo-header').textContent = p1+' – '+p2;
+
+  // Charts
+  charts.diario.data.labels = labels;
+  charts.diario.data.datasets[0].data = hl;
+  charts.diario.data.datasets[1].data = ms;
+  charts.diario.data.datasets[2].data = lu2;
+  charts.diario.data.datasets[2].backgroundColor = lu2.map(function(x){return x>=0?'rgba(16,185,129,.75)':'rgba(239,68,68,.7)';});
+  charts.diario.update();
+  charts.vendas.data.labels = labels;
+  charts.vendas.data.datasets[0].data = vv;
+  charts.vendas.update();
+  charts.acum.data.labels = labels;
+  charts.acum.data.datasets[0].data = ac2;
+  charts.acum.update();
+
+  // Tabela diária
+  var tbody = document.getElementById('daily-tbody');
+  tbody.innerHTML = '';
+  days.forEach(function(d, i) {
+    var row = mData[d];
+    var lucro_d = row.hl - row.ms;
+    var roas_d = row.ms > 0 ? row.hl/row.ms : 0;
+    var lc = lucro_d>=0 ? '#16a34a' : '#ef4444';
+    var rc = roas_d>=1.5 ? '#16a34a' : roas_d>=1.0 ? '#ca8a04' : '#94a3b8';
+    tbody.innerHTML += '<tr style="border-bottom:1px solid #f1f5f9">'
+      +'<td style="padding:12px 16px;font-weight:600;color:#334155">'+labels[i]+'</td>'
+      +'<td style="padding:12px 16px;text-align:right;color:#475569">'+row.hv+'</td>'
+      +'<td style="padding:12px 16px;text-align:right;color:#475569">'+pt(row.hb)+'</td>'
+      +'<td style="padding:12px 16px;text-align:right;color:#475569">'+pt(row.hl)+'</td>'
+      +'<td style="padding:12px 16px;text-align:right;color:#475569">'+(row.ms?pt(row.ms):'—')+'</td>'
+      +'<td style="padding:12px 16px;text-align:right;font-weight:700;color:'+lc+'">'+(lucro_d>=0?'+':'')+pt(lucro_d)+'</td>'
+      +'<td style="padding:12px 16px;text-align:right;font-weight:600;color:'+rc+'">'+(row.ms>0?pR(roas_d):'—')+'</td>'
+      +'</tr>';
+  });
+
+  // Tfoot
+  var roas2c = roas2>=1.5?'#16a34a':roas2>=1.0?'#ca8a04':'#94a3b8';
+  var tlr2c  = tlr2>=0?'#16a34a':'#ef4444';
+  document.getElementById('daily-tfoot').innerHTML =
+    '<tr style="background:#f8fafc;font-weight:700;border-top:2px solid #e2e8f0">'
+    +'<td style="padding:12px 16px;color:#1e293b">TOTAL MÊS</td>'
+    +'<td style="padding:12px 16px;text-align:right;color:#1e293b">'+tv2+'</td>'
+    +'<td style="padding:12px 16px;text-align:right;color:#1e293b">'+pt(tb2)+'</td>'
+    +'<td style="padding:12px 16px;text-align:right;color:#1e293b">'+pt(tl2)+'</td>'
+    +'<td style="padding:12px 16px;text-align:right;color:#1e293b">'+(ts2?pt(ts2):'—')+'</td>'
+    +'<td style="padding:12px 16px;text-align:right;font-weight:700;color:'+tlr2c+'">'+(tlr2>=0?'+':'')+pt(tlr2)+'</td>'
+    +'<td style="padding:12px 16px;text-align:right;font-weight:600;color:'+roas2c+'">'+(roas2>0?pR(roas2):'—')+'</td>'
+    +'</tr>';
+
+  // Semanas
+  var wkData = {};
+  days.forEach(function(d) {
+    var wk = Math.floor((parseInt(d.slice(8))-1)/7)+1;
+    if (!wkData[wk]) wkData[wk] = {v:0,bruto:0,liq:0,spend:0,days:[]};
+    wkData[wk].v     += mData[d].hv;
+    wkData[wk].bruto += mData[d].hb;
+    wkData[wk].liq   += mData[d].hl;
+    wkData[wk].spend += mData[d].ms;
+    wkData[wk].days.push(d);
+  });
+  var wks = Object.keys(wkData).map(Number).sort(function(a,b){return a-b;});
+  var wLab2 = wks.map(function(w){ return 'Sem '+w; });
+  var wLu2  = wks.map(function(w){ return wkData[w].liq - wkData[w].spend; });
+
+  if (charts.semanal) {
+    charts.semanal.data.labels = wLab2;
+    charts.semanal.data.datasets[0].data = wLu2;
+    charts.semanal.data.datasets[0].backgroundColor = wLu2.map(function(x){ return x>=0?'rgba(16,185,129,.75)':'rgba(239,68,68,.7)'; });
+    charts.semanal.update();
+  }
+
+  var wTbody = document.getElementById('weekly-tbody');
+  if (wTbody) {
+    wTbody.innerHTML = '';
+    var todayWk2 = m === CURR_M ? Math.floor((TODAY_DAY-1)/7)+1 : -1;
+    wks.forEach(function(wk) {
+      var wd = wkData[wk];
+      var wDays = wd.days.slice().sort();
+      var period = wDays[0].slice(8)+'/'+wDays[0].slice(5,7)+' – '+wDays[wDays.length-1].slice(8)+'/'+wDays[wDays.length-1].slice(5,7);
+      var lucro_w = wd.liq - wd.spend;
+      var roas_w  = wd.spend > 0 ? wd.bruto/wd.spend : 0;
+      var lc = lucro_w>=0?'#16a34a':'#ef4444';
+      var rc = roas_w>=1.5?'#16a34a':roas_w>=1.0?'#ca8a04':'#94a3b8';
+      var badge = wk===todayWk2 ? ' <span style="font-size:10px;background:#dbeafe;color:#2563eb;border-radius:999px;padding:1px 6px;margin-left:4px;font-weight:600">atual</span>' : '';
+      var rowBg = wk===todayWk2 ? 'background:#eff6ff;' : '';
+      wTbody.innerHTML += '<tr style="border-bottom:1px solid #f1f5f9;'+rowBg+'">'
+        +'<td style="padding:12px 16px;font-weight:600;color:#334155">Semana '+wk+badge+'</td>'
+        +'<td style="padding:12px 16px;font-size:12px;color:#94a3b8">'+period+'</td>'
+        +'<td style="padding:12px 16px;text-align:right;color:#475569">'+wd.v+'</td>'
+        +'<td style="padding:12px 16px;text-align:right;color:#475569">'+pt(wd.bruto)+'</td>'
+        +'<td style="padding:12px 16px;text-align:right;color:#475569">'+pt(wd.liq)+'</td>'
+        +'<td style="padding:12px 16px;text-align:right;color:#475569">'+(wd.spend?pt(wd.spend):'—')+'</td>'
+        +'<td style="padding:12px 16px;text-align:right;font-weight:700;color:'+lc+'">'+(lucro_w>=0?'+':'')+pt(lucro_w)+'</td>'
+        +'<td style="padding:12px 16px;text-align:right;font-weight:600;color:'+rc+'">'+(wd.spend>0?pR(roas_w):'—')+'</td>'
+        +'</tr>';
+    });
+  }
+}
+
+// ── Auto-refresh a cada 1 hora ────────────────────────────────────────────────
+var WEBHOOK = 'https://hook.us2.make.com/xec8oo29t9nftow0p3qnkcr4aslfnhhr';
+var lastTrigger = GEN_TS;
+var autoTriggered = false;
+
+function triggerUpdate(auto) {
+  var b = document.getElementById('btnAtualizar');
+  if (!auto) { b.disabled=true; b.innerHTML='⏳ Iniciando...'; }
+  fetch(WEBHOOK, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({trigger:'dashboard'})})
+  .then(function() {
+    if (auto) {
+      document.getElementById('autoRefreshStatus').textContent = '↻ Atualizando... recarregando em 2 min';
+      setTimeout(function(){ window.location.reload(); }, 120000);
+    } else {
+      b.innerHTML='✓ Iniciado! Aguarde ~1 min';
+      b.style.background='rgba(22,163,74,.5)';
+      setTimeout(function(){ b.innerHTML='↻ Atualizar agora'; b.style.background=''; b.disabled=false; }, 90000);
+    }
+  }).catch(function() {
+    if (!auto) { b.innerHTML='✗ Erro de conexão'; b.disabled=false; }
+  });
+}
+
+// Countdown e auto-trigger
+setInterval(function() {
+  var elapsed = Date.now() - lastTrigger;
+  var remaining = Math.max(0, 3600000 - elapsed);
+  if (remaining === 0 && !autoTriggered) {
+    autoTriggered = true;
+    lastTrigger = Date.now();
+    triggerUpdate(true);
+  }
+  var min = Math.floor(remaining/60000);
+  var sec = Math.floor((remaining%60000)/1000);
+  var el = document.getElementById('autoRefreshStatus');
+  if (el && !autoTriggered) {
+    el.textContent = 'Próx. atualização em '+min+'min '+(sec<10?'0':'')+sec+'s';
+  }
+}, 1000);
 </script>
 </body>
 </html>
