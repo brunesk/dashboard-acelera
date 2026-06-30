@@ -33,20 +33,39 @@ def get_hotmart_token(basic):
         '-H', f'Authorization: {basic}'], capture_output=True, text=True)
     return json.loads(r.stdout)['access_token']
 
+def _hotmart_page(token, params):
+    url = 'https://developers.hotmart.com/payments/api/v1/sales/history?' + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={'Authorization': f'Bearer {token}'})
+    with urllib.request.urlopen(req) as r:
+        return json.loads(r.read())
+
 def fetch_hotmart_all(token):
-    # Buscar desde 18 meses atrás para garantir histórico completo
-    from datetime import timezone, timedelta
+    # Tenta com filtro de data (18 meses); se a API rejeitar, busca sem filtro
     since_ms = int((datetime.now(timezone.utc) - timedelta(days=548)).timestamp() * 1000)
     items, page_token = [], None
+    use_date_filter = True
+    first_call = True
     while True:
-        params = {'max_results': 100, 'transaction_date_min': since_ms}
-        if page_token: params['page_token'] = page_token
-        url = 'https://developers.hotmart.com/payments/api/v1/sales/history?' + urllib.parse.urlencode(params)
-        req = urllib.request.Request(url, headers={'Authorization': f'Bearer {token}'})
-        with urllib.request.urlopen(req) as r: data = json.loads(r.read())
+        params = {'max_results': 100}
+        if use_date_filter:
+            params['start_date'] = since_ms
+        if page_token:
+            params['page_token'] = page_token
+        try:
+            data = _hotmart_page(token, params)
+        except Exception as e:
+            if first_call and use_date_filter:
+                print(f'Aviso: filtro de data rejeitado ({e}), buscando sem filtro')
+                use_date_filter = False
+                params = {'max_results': 100}
+                data = _hotmart_page(token, params)
+            else:
+                raise
+        first_call = False
         items.extend(data.get('items', []))
         page_token = data.get('page_info', {}).get('next_page_token')
-        if not page_token: break
+        if not page_token:
+            break
     return items
 
 def fetch_meta_daily(token, since, until):
