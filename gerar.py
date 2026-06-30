@@ -34,9 +34,12 @@ def get_hotmart_token(basic):
     return json.loads(r.stdout)['access_token']
 
 def fetch_hotmart_all(token):
+    # Buscar desde 18 meses atrás para garantir histórico completo
+    from datetime import timezone, timedelta
+    since_ms = int((datetime.now(timezone.utc) - timedelta(days=548)).timestamp() * 1000)
     items, page_token = [], None
     while True:
-        params = {'max_results': 100}
+        params = {'max_results': 100, 'transaction_date_min': since_ms}
         if page_token: params['page_token'] = page_token
         url = 'https://developers.hotmart.com/payments/api/v1/sales/history?' + urllib.parse.urlencode(params)
         req = urllib.request.Request(url, headers={'Authorization': f'Bearer {token}'})
