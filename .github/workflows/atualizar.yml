@@ -2,7 +2,7 @@ name: Atualizar Dashboard
 
 on:
   schedule:
-    - cron: '0 3 * * *'   # 3h UTC = meia-noite BRT
+    - cron: '0 * * * *'   # toda hora (UTC)
   workflow_dispatch:        # permite rodar manualmente
 
 jobs:

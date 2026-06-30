@@ -1,7 +1,8 @@
 """
 Gera index.html com dados do Meta + Hotmart
-- KPIs e gráficos: mês vigente (do dia 1 até ontem)
-- Tabela inferior: fechamento de cada mês anterior
+- KPIs e gráficos: mês selecionado (padrão: vigente)
+- Seletor de mês para navegar entre meses passados
+- Auto-refresh a cada 1 hora quando a página estiver aberta
 """
 import urllib.request, urllib.parse, json, subprocess, sys, os, calendar
 from datetime import datetime, timezone, timedelta
@@ -109,6 +110,7 @@ month_start_str = month_start.strftime('%Y-%m-%d')
 today_str      = today.strftime('%Y-%m-%d')
 month_start_ms = int(month_start.timestamp() * 1000)
 today_end_ms   = int(today.replace(hour=23, minute=59, second=59).timestamp() * 1000)
+gen_ts_ms      = int(now.timestamp() * 1000)
 
 print(f'Mês vigente: {month_start.strftime("%d/%m")} – {today.strftime("%d/%m/%Y")}')
 
@@ -119,6 +121,7 @@ hm_all   = fetch_hotmart_all(hm_token)
 
 hm_by_month = defaultdict(lambda: {'v':0,'bruto':0.0,'liq':0.0})
 hm_curr_day = defaultdict(lambda: {'v':0,'bruto':0.0,'liq':0.0})
+hm_all_days = defaultdict(lambda: defaultdict(lambda: {'v':0,'bruto':0.0,'liq':0.0}))
 
 for item in hm_all:
     p = item['purchase']
@@ -133,6 +136,10 @@ for item in hm_all:
     hm_by_month[m_key]['v']     += 1
     hm_by_month[m_key]['bruto'] += price
     hm_by_month[m_key]['liq']   += price - fee
+
+    hm_all_days[m_key][d_key]['v']     += 1
+    hm_all_days[m_key][d_key]['bruto'] += price
+    hm_all_days[m_key][d_key]['liq']   += price - fee
 
     if month_start_ms <= ts <= today_end_ms:
         hm_curr_day[d_key]['v']     += 1
@@ -157,6 +164,8 @@ if meta_curr_raw:
         meta_curr_day[d['date_start']] = {'spend': spend, 'purchases': purchases}
 
 meta_by_month = {}
+meta_all_days = defaultdict(dict)
+
 if prev_months and meta_ok:
     print('Buscando Meta (histórico mensal)...')
     hist_since = f'{prev_months[0]}-01'
@@ -169,12 +178,34 @@ if prev_months and meta_ok:
     if meta_hist_raw:
         for d in meta_hist_raw:
             m = d['date_start'][:7]
+            day = d['date_start']
+            spend = float(d.get('spend', 0))
+            purchases = next((int(a['value']) for a in d.get('actions',[]) if a['action_type']=='purchase'), 0)
             if m not in meta_by_month:
                 meta_by_month[m] = {'spend': 0.0, 'purchases': 0}
-            meta_by_month[m]['spend']     += float(d.get('spend', 0))
-            meta_by_month[m]['purchases'] += next((int(a['value']) for a in d.get('actions',[]) if a['action_type']=='purchase'), 0)
+            meta_by_month[m]['spend']     += spend
+            meta_by_month[m]['purchases'] += purchases
+            meta_all_days[m][day] = {'spend': spend, 'purchases': purchases}
+
+for day, data in meta_curr_day.items():
+    meta_all_days[curr_month_key][day] = data
 
 ads_data = fetch_meta_ads(meta_token, month_start_str, today_str) if meta_ok else None
+
+# ── ALL_DATA: todos os meses com dados diários ────────────────────────────────
+all_data = {}
+for m in sorted(hm_all_days.keys()):
+    hm_days   = hm_all_days[m]
+    meta_days = meta_all_days.get(m, {})
+    all_days_in_m = sorted(set(list(hm_days.keys()) + list(meta_days.keys())))
+    all_data[m] = {d: {
+        'hv': hm_days.get(d, {}).get('v', 0),
+        'hb': round(hm_days.get(d, {}).get('bruto', 0), 2),
+        'hl': round(hm_days.get(d, {}).get('liq', 0), 2),
+        'ms': round(meta_days.get(d, {}).get('spend', 0), 2),
+        'mp': meta_days.get(d, {}).get('purchases', 0),
+    } for d in all_days_in_m}
+all_data_js = json.dumps(all_data, ensure_ascii=False)
 
 # ── KPIs mês vigente ──────────────────────────────────────────────────────────
 curr_days  = sorted(set(list(hm_curr_day.keys()) + list(meta_curr_day.keys())))
@@ -221,6 +252,15 @@ MESES_PT = {1:'Jan',2:'Fev',3:'Mar',4:'Abr',5:'Mai',6:'Jun',
 def fmt_month(m_key):
     yr, mo = int(m_key[:4]), int(m_key[5:7])
     return f'{MESES_PT[mo]}/{yr}'
+
+# ── Seletor de mês ────────────────────────────────────────────────────────────
+month_opts = ''
+for m in reversed(sorted(hm_all_days.keys())):
+    yr2, mo2 = int(m[:4]), int(m[5:7])
+    label = f'{MESES_PT[mo2]}/{yr2}'
+    selected = 'selected' if m == curr_month_key else ''
+    curr_label = ' ← Atual' if m == curr_month_key else ''
+    month_opts += f'<option value="{m}" {selected}>{label}{curr_label}</option>\n'
 
 # ── Criativos ────────────────────────────────────────────────────────────────
 ads_rows = ''
@@ -298,7 +338,7 @@ aviso_meta = '' if meta_ok else '<div class="bg-amber-50 border border-amber-200
 criativo_section = ''
 if ads_data:
     criativo_section = f'''<div class="card overflow-hidden">
-    <div class="px-6 py-5 border-b border-slate-100"><h2 class="text-lg font-bold text-slate-800">Criativos — {periodo_vigente}</h2><p class="text-sm text-slate-400 mt-0.5">Mês vigente · ordenado por investimento · ROAS = atribuição pixel Meta</p></div>
+    <div class="px-6 py-5 border-b border-slate-100"><h2 class="text-lg font-bold text-slate-800">Criativos — <span id="periodo-criativos">{periodo_vigente}</span></h2><p class="text-sm text-slate-400 mt-0.5">Mês vigente · ordenado por investimento · ROAS = atribuição pixel Meta</p></div>
     <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide"><th class="text-left py-3 px-4">Criativo</th><th class="text-center py-3 px-4">Status</th><th class="text-right py-3 px-4">Gasto</th><th class="text-right py-3 px-4">Impressões</th><th class="text-right py-3 px-4">CTR</th><th class="text-right py-3 px-4">CPM</th><th class="text-right py-3 px-4">Compras</th><th class="text-right py-3 px-4">ROAS</th><th class="text-right py-3 px-4">CPA</th></tr></thead><tbody>{ads_rows}</tbody></table></div>
     <div class="px-6 py-3 bg-slate-50 border-t text-xs text-slate-400">ROAS real mês vigente (Hotmart líquido / Meta gasto): <strong class="text-slate-600">{roas:.2f}x</strong></div>
     </div>'''
@@ -367,7 +407,7 @@ for _wk in sorted(weekly_data.keys()):
 weekly_section = f'''<div class="card overflow-hidden">
     <div class="px-6 py-5 border-b border-slate-100">
       <h2 class="text-lg font-bold text-slate-800">Desempenho Semanal</h2>
-      <p class="text-sm text-slate-400 mt-0.5">Mês vigente · semanas de 7 dias a partir do dia 01</p>
+      <p class="text-sm text-slate-400 mt-0.5">Semanas de 7 dias a partir do dia 01</p>
     </div>
     <div class="px-5 pt-5 pb-1" style="height:130px"><canvas id="cSemanal"></canvas></div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
@@ -381,34 +421,9 @@ weekly_section = f'''<div class="card overflow-hidden">
         <th class="text-right py-3 px-4">Lucro</th>
         <th class="text-right py-3 px-4">ROAS</th>
       </tr></thead>
-      <tbody>{weekly_rows}</tbody>
+      <tbody id="weekly-tbody">{weekly_rows}</tbody>
     </table></div>
     </div>'''
-
-# ── Botão atualizar (chama Make.com webhook → Make.com chama GitHub Actions) ───
-_js = (
-    'function triggerUpdate(){'
-    'var b=document.getElementById("btnAtualizar");'
-    'b.disabled=true;b.innerHTML="⏳ Iniciando...";'
-    'fetch("https://hook.us2.make.com/xec8oo29t9nftow0p3qnkcr4aslfnhhr",'
-    '{"method":"POST","headers":{"Content-Type":"application/json"},'
-    '"body":JSON.stringify({"trigger":"dashboard"})})'
-    '.then(function(){'
-    'b.innerHTML="✓ Iniciado! Aguarde ~1 min";'
-    'b.style.background="rgba(22,163,74,.5)";'
-    'setTimeout(function(){b.innerHTML="↻ Atualizar agora";b.style.background="";b.disabled=false;},90000);'
-    '}).catch(function(){'
-    'b.innerHTML="✗ Erro de conexão";b.disabled=false;});}'
-)
-update_btn = (
-    '<button id="btnAtualizar" onclick="triggerUpdate()" '
-    'style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;'
-    'background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);'
-    'border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600;'
-    'color:white;cursor:pointer;transition:background .2s">'
-    '↻ Atualizar agora</button>'
-    '<script>' + _js + '</script>'
-)
 
 # ── HTML ──────────────────────────────────────────────────────────────────────
 html = f'''<!DOCTYPE html>
@@ -424,6 +439,8 @@ html = f'''<!DOCTYPE html>
 * {{ box-sizing:border-box }}
 body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f8fafc }}
 .card {{ background:white; border-radius:16px; box-shadow:0 1px 3px rgba(0,0,0,.07); border:1px solid #f1f5f9 }}
+#monthSel {{ background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); border-radius:8px; color:white; padding:4px 8px; font-size:13px; font-weight:600; cursor:pointer }}
+#monthSel option {{ background:#1e3a8a; color:white }}
 </style>
 </head>
 <body class="min-h-screen">
@@ -438,7 +455,10 @@ body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; back
           </div>
           <div>
             <h1 class="text-xl font-black tracking-tight">Acelera Shopee</h1>
-            <p class="text-blue-300 text-[11px]">Mês vigente: {periodo_vigente}</p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <p class="text-blue-300 text-[11px]" id="periodo-header">{periodo_vigente}</p>
+              <select id="monthSel" onchange="switchMonth(this.value)">{month_opts}</select>
+            </div>
           </div>
         </div>
       </div>
@@ -447,38 +467,39 @@ body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; back
           <span class="w-1.5 h-1.5 bg-green-400 rounded-full inline-block"></span>
           Atualizado {atualizado}
         </div>
-        {update_btn}
+        <div class="text-[10px] text-blue-300 mt-0.5" id="autoRefreshStatus">carregando...</div>
+        <button id="btnAtualizar" onclick="triggerUpdate(false)" style="margin-top:4px;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600;color:white;cursor:pointer;transition:background .2s">↻ Atualizar agora</button>
       </div>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Vendas</p>
-        <p class="text-3xl font-black">{tv}</p>
-        <p class="text-blue-300 text-xs mt-0.5">mês atual</p>
+        <p class="text-3xl font-black" id="kpi-vendas">{tv}</p>
+        <p class="text-blue-300 text-xs mt-0.5">mês selecionado</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Rec. Líquida</p>
-        <p class="text-xl font-black">{brl(tl)}</p>
+        <p class="text-xl font-black" id="kpi-liq">{brl(tl)}</p>
         <p class="text-blue-300 text-xs mt-0.5">após taxa Hotmart</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Gasto Meta</p>
-        <p class="text-xl font-black">{brl(ts) if ts else "—"}</p>
+        <p class="text-xl font-black" id="kpi-meta">{brl(ts) if ts else "—"}</p>
         <p class="text-blue-300 text-xs mt-0.5">investido</p>
       </div>
-      <div class="{'bg-green-400/30 border-green-300/40' if tlr>=0 else 'bg-red-400/30 border-red-300/40'} rounded-2xl p-3.5 border">
+      <div class="{'bg-green-400/30 border-green-300/40' if tlr>=0 else 'bg-red-400/30 border-red-300/40'} rounded-2xl p-3.5 border" id="kpi-lucro-card">
         <p class="{'text-green-200' if tlr>=0 else 'text-red-200'} text-[10px] font-semibold uppercase tracking-wide mb-1">Lucro Real</p>
-        <p class="text-xl font-black {'text-green-300' if tlr>=0 else 'text-red-300'}">{"+" if tlr>=0 else ""}{brl(tlr)}</p>
-        <p class="{'text-green-300' if tlr>=0 else 'text-red-300'} text-xs mt-0.5">{brl(tlr/len(curr_days)) if curr_days else "—"}/dia</p>
+        <p class="text-xl font-black {'text-green-300' if tlr>=0 else 'text-red-300'}" id="kpi-lucro">{"+" if tlr>=0 else ""}{brl(tlr)}</p>
+        <p class="{'text-green-300' if tlr>=0 else 'text-red-300'} text-xs mt-0.5" id="kpi-lucro-dia">{brl(tlr/len(curr_days)) if curr_days else "—"}/dia</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">ROAS Real</p>
-        <p class="text-3xl font-black">{pct_roas(roas) if roas else "—"}</p>
+        <p class="text-3xl font-black" id="kpi-roas">{pct_roas(roas) if roas else "—"}</p>
         <p class="text-blue-300 text-xs mt-0.5">líq/gasto</p>
       </div>
       <div class="bg-white/10 rounded-2xl p-3.5 border border-white/20">
         <p class="text-blue-200 text-[10px] font-semibold uppercase tracking-wide mb-1">Ticket Médio</p>
-        <p class="text-xl font-black">{brl(ticket)}</p>
+        <p class="text-xl font-black" id="kpi-ticket">{brl(ticket)}</p>
         <p class="text-blue-300 text-xs mt-0.5">por venda</p>
       </div>
     </div>
@@ -488,10 +509,10 @@ body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; back
 <div class="max-w-6xl mx-auto px-4 py-6 md:px-6 space-y-5">
   {aviso_meta}
 
-  <!-- Gráficos mês vigente -->
+  <!-- Gráficos -->
   <div class="card p-5">
     <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
-      <div><h2 class="font-bold text-slate-800">Desempenho Diário — Mês Vigente</h2><p class="text-xs text-slate-400 mt-0.5">Receita Líq. HM vs Gasto Meta vs Lucro</p></div>
+      <div><h2 class="font-bold text-slate-800">Desempenho Diário</h2><p class="text-xs text-slate-400 mt-0.5">Receita Líq. HM vs Gasto Meta vs Lucro</p></div>
       <div class="flex items-center gap-4 text-xs text-slate-500">
         <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block bg-blue-500"></span>Rec. Líq.</span>
         <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block bg-red-400"></span>Meta</span>
@@ -504,12 +525,12 @@ body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; back
   <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
     <div class="card p-5">
       <h2 class="font-bold text-slate-800 mb-0.5">Vendas / Dia</h2>
-      <p class="text-xs text-slate-400 mb-4">Compras no Hotmart — mês vigente</p>
+      <p class="text-xs text-slate-400 mb-4">Compras no Hotmart</p>
       <div style="height:170px"><canvas id="cVendas"></canvas></div>
     </div>
     <div class="card p-5">
       <h2 class="font-bold text-slate-800 mb-0.5">Lucro Acumulado</h2>
-      <p class="text-xs text-slate-400 mb-4">Progressão no mês vigente</p>
+      <p class="text-xs text-slate-400 mb-4">Progressão no mês</p>
       <div style="height:170px"><canvas id="cAcum"></canvas></div>
     </div>
   </div>
@@ -518,9 +539,9 @@ body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; back
 
   {criativo_section}
 
-  <!-- Tabela dia a dia mês vigente -->
+  <!-- Tabela dia a dia -->
   <div class="card overflow-hidden">
-    <div class="px-6 py-5 border-b border-slate-100"><h2 class="text-lg font-bold text-slate-800">Dia a Dia — Mês Vigente</h2></div>
+    <div class="px-6 py-5 border-b border-slate-100"><h2 class="text-lg font-bold text-slate-800">Dia a Dia</h2></div>
     <div class="overflow-x-auto"><table class="w-full text-sm">
       <thead><tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
         <th class="text-left py-3 px-4">Dia</th><th class="text-right py-3 px-4">Vendas</th>
@@ -528,8 +549,8 @@ body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; back
         <th class="text-right py-3 px-4">Gasto Meta</th><th class="text-right py-3 px-4">Lucro</th>
         <th class="text-right py-3 px-4">ROAS</th>
       </tr></thead>
-      <tbody>{daily_rows}</tbody>
-      <tfoot><tr class="bg-slate-50 font-bold border-t-2 border-slate-200">
+      <tbody id="daily-tbody">{daily_rows}</tbody>
+      <tfoot id="daily-tfoot"><tr class="bg-slate-50 font-bold border-t-2 border-slate-200">
         <td class="py-3 px-4 text-slate-800">TOTAL MÊS</td>
         <td class="py-3 px-4 text-right text-slate-800">{tv}</td>
         <td class="py-3 px-4 text-right text-slate-800">{brl(tb)}</td>
@@ -543,13 +564,18 @@ body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; back
 
   {monthly_section}
 
-  <p class="text-center text-xs text-slate-400 pb-4">Atualizado automaticamente todo dia à meia-noite · {atualizado}</p>
+  <p class="text-center text-xs text-slate-400 pb-4">Atualizado automaticamente a cada hora · {atualizado}</p>
 </div>
 __SCRIPT__
 </body>
 </html>'''
 
-script_block = '<script>\n'
+# ── Script block ──────────────────────────────────────────────────────────────
+script_block  = '<script>\n'
+script_block += f'var ALL_DATA = {all_data_js};\n'
+script_block += f'var CURR_M   = {json.dumps(curr_month_key)};\n'
+script_block += f'var GEN_TS   = {gen_ts_ms};\n'
+script_block += f'var TODAY_DAY = {today.day};\n'
 script_block += 'var L   = ' + json.dumps(dias_fmt) + ';\n'
 script_block += 'var liq = ' + json.dumps(hm_liq_series) + ';\n'
 script_block += 'var g   = ' + json.dumps(gasto_series) + ';\n'
@@ -559,9 +585,12 @@ script_block += 'var wL  = ' + weekly_labels_js + ';\n'
 script_block += 'var wLu = ' + weekly_lucro_js + ';\n'
 script_block += r"""
 var ac = lu.reduce(function(a,x,i){ a.push((a[i-1]||0)+x); return a; }, []);
-var pt = function(x){ return 'R$'+x.toLocaleString('pt-BR',{maximumFractionDigits:0}); };
+var pt = function(x){ return 'R$'+Math.round(x).toLocaleString('pt-BR',{maximumFractionDigits:0}); };
+var pR = function(x){ return x.toFixed(2)+'x'; };
 
-new Chart(document.getElementById('cDiario'), {
+var charts = {};
+
+charts.diario = new Chart(document.getElementById('cDiario'), {
   data: { labels: L, datasets: [
     {type:'line', label:'Rec. Líq.',  data:liq, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.08)', fill:true, tension:.4, pointRadius:3, borderWidth:2.5},
     {type:'line', label:'Gasto Meta', data:g,   borderColor:'#f87171', backgroundColor:'rgba(248,113,113,.08)', fill:true, tension:.4, pointRadius:3, borderWidth:2.5},
@@ -573,7 +602,7 @@ new Chart(document.getElementById('cDiario'), {
   }
 });
 
-new Chart(document.getElementById('cVendas'), {
+charts.vendas = new Chart(document.getElementById('cVendas'), {
   type: 'bar',
   data: { labels: L, datasets: [{data:v, backgroundColor:'#bfdbfe', borderColor:'#3b82f6', borderWidth:1.5, borderRadius:5}] },
   options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
@@ -581,7 +610,7 @@ new Chart(document.getElementById('cVendas'), {
   }
 });
 
-new Chart(document.getElementById('cAcum'), {
+charts.acum = new Chart(document.getElementById('cAcum'), {
   type: 'line',
   data: { labels: L, datasets: [{data:ac, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,.1)', fill:true, tension:.4, pointRadius:3, borderWidth:2.5}] },
   options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
@@ -590,7 +619,7 @@ new Chart(document.getElementById('cAcum'), {
 });
 
 if (document.getElementById('cSemanal')) {
-  new Chart(document.getElementById('cSemanal'), {
+  charts.semanal = new Chart(document.getElementById('cSemanal'), {
     type: 'bar',
     data: { labels: wL, datasets: [{
       data: wLu,
@@ -602,6 +631,178 @@ if (document.getElementById('cSemanal')) {
     }
   });
 }
+
+// ── Seletor de mês ────────────────────────────────────────────────────────────
+function switchMonth(m) {
+  var mData = ALL_DATA[m];
+  if (!mData) return;
+  var days = Object.keys(mData).sort();
+  var labels = days.map(function(d){ return d.slice(8)+'/'+d.slice(5,7); });
+  var hl = days.map(function(d){ return mData[d].hl; });
+  var ms = days.map(function(d){ return mData[d].ms; });
+  var lu2 = days.map(function(d){ return mData[d].hl - mData[d].ms; });
+  var vv  = days.map(function(d){ return mData[d].hv; });
+  var ac2 = lu2.reduce(function(a,x,i){ a.push((a[i-1]||0)+x); return a; }, []);
+
+  var tv2 = days.reduce(function(s,d){ return s+mData[d].hv; }, 0);
+  var tb2 = days.reduce(function(s,d){ return s+mData[d].hb; }, 0);
+  var tl2 = days.reduce(function(s,d){ return s+mData[d].hl; }, 0);
+  var ts2 = days.reduce(function(s,d){ return s+mData[d].ms; }, 0);
+  var tlr2= tl2 - ts2;
+  var roas2 = ts2 > 0 ? tl2/ts2 : 0;
+  var tick2 = tv2 > 0 ? tl2/tv2 : 0;
+
+  // KPIs
+  document.getElementById('kpi-vendas').textContent = tv2;
+  document.getElementById('kpi-liq').textContent = pt(tl2);
+  document.getElementById('kpi-meta').textContent = ts2 > 0 ? pt(ts2) : '—';
+  document.getElementById('kpi-lucro').textContent = (tlr2>=0?'+':'')+pt(tlr2);
+  document.getElementById('kpi-lucro-dia').textContent = days.length ? pt(tlr2/days.length)+'/dia' : '';
+  document.getElementById('kpi-roas').textContent = roas2 > 0 ? pR(roas2) : '—';
+  document.getElementById('kpi-ticket').textContent = pt(tick2);
+
+  // Período
+  var p1 = days[0] ? days[0].slice(8)+'/'+days[0].slice(5,7) : '';
+  var p2 = days[days.length-1] ? days[days.length-1].slice(8)+'/'+days[days.length-1].slice(5,7)+'/'+days[days.length-1].slice(0,4) : '';
+  document.getElementById('periodo-header').textContent = p1+' – '+p2;
+
+  // Charts
+  charts.diario.data.labels = labels;
+  charts.diario.data.datasets[0].data = hl;
+  charts.diario.data.datasets[1].data = ms;
+  charts.diario.data.datasets[2].data = lu2;
+  charts.diario.data.datasets[2].backgroundColor = lu2.map(function(x){return x>=0?'rgba(16,185,129,.75)':'rgba(239,68,68,.7)';});
+  charts.diario.update();
+  charts.vendas.data.labels = labels;
+  charts.vendas.data.datasets[0].data = vv;
+  charts.vendas.update();
+  charts.acum.data.labels = labels;
+  charts.acum.data.datasets[0].data = ac2;
+  charts.acum.update();
+
+  // Tabela diária
+  var tbody = document.getElementById('daily-tbody');
+  tbody.innerHTML = '';
+  days.forEach(function(d, i) {
+    var row = mData[d];
+    var lucro_d = row.hl - row.ms;
+    var roas_d = row.ms > 0 ? row.hl/row.ms : 0;
+    var lc = lucro_d>=0 ? '#16a34a' : '#ef4444';
+    var rc = roas_d>=1.5 ? '#16a34a' : roas_d>=1.0 ? '#ca8a04' : '#94a3b8';
+    tbody.innerHTML += '<tr style="border-bottom:1px solid #f1f5f9">'
+      +'<td style="padding:12px 16px;font-weight:600;color:#334155">'+labels[i]+'</td>'
+      +'<td style="padding:12px 16px;text-align:right;color:#475569">'+row.hv+'</td>'
+      +'<td style="padding:12px 16px;text-align:right;color:#475569">'+pt(row.hb)+'</td>'
+      +'<td style="padding:12px 16px;text-align:right;color:#475569">'+pt(row.hl)+'</td>'
+      +'<td style="padding:12px 16px;text-align:right;color:#475569">'+(row.ms?pt(row.ms):'—')+'</td>'
+      +'<td style="padding:12px 16px;text-align:right;font-weight:700;color:'+lc+'">'+(lucro_d>=0?'+':'')+pt(lucro_d)+'</td>'
+      +'<td style="padding:12px 16px;text-align:right;font-weight:600;color:'+rc+'">'+(row.ms>0?pR(roas_d):'—')+'</td>'
+      +'</tr>';
+  });
+
+  // Tfoot
+  var roas2c = roas2>=1.5?'#16a34a':roas2>=1.0?'#ca8a04':'#94a3b8';
+  var tlr2c  = tlr2>=0?'#16a34a':'#ef4444';
+  document.getElementById('daily-tfoot').innerHTML =
+    '<tr style="background:#f8fafc;font-weight:700;border-top:2px solid #e2e8f0">'
+    +'<td style="padding:12px 16px;color:#1e293b">TOTAL MÊS</td>'
+    +'<td style="padding:12px 16px;text-align:right;color:#1e293b">'+tv2+'</td>'
+    +'<td style="padding:12px 16px;text-align:right;color:#1e293b">'+pt(tb2)+'</td>'
+    +'<td style="padding:12px 16px;text-align:right;color:#1e293b">'+pt(tl2)+'</td>'
+    +'<td style="padding:12px 16px;text-align:right;color:#1e293b">'+(ts2?pt(ts2):'—')+'</td>'
+    +'<td style="padding:12px 16px;text-align:right;font-weight:700;color:'+tlr2c+'">'+(tlr2>=0?'+':'')+pt(tlr2)+'</td>'
+    +'<td style="padding:12px 16px;text-align:right;font-weight:600;color:'+roas2c+'">'+(roas2>0?pR(roas2):'—')+'</td>'
+    +'</tr>';
+
+  // Semanas
+  var wkData = {};
+  days.forEach(function(d) {
+    var wk = Math.floor((parseInt(d.slice(8))-1)/7)+1;
+    if (!wkData[wk]) wkData[wk] = {v:0,bruto:0,liq:0,spend:0,days:[]};
+    wkData[wk].v     += mData[d].hv;
+    wkData[wk].bruto += mData[d].hb;
+    wkData[wk].liq   += mData[d].hl;
+    wkData[wk].spend += mData[d].ms;
+    wkData[wk].days.push(d);
+  });
+  var wks = Object.keys(wkData).map(Number).sort(function(a,b){return a-b;});
+  var wLab2 = wks.map(function(w){ return 'Sem '+w; });
+  var wLu2  = wks.map(function(w){ return wkData[w].liq - wkData[w].spend; });
+
+  if (charts.semanal) {
+    charts.semanal.data.labels = wLab2;
+    charts.semanal.data.datasets[0].data = wLu2;
+    charts.semanal.data.datasets[0].backgroundColor = wLu2.map(function(x){ return x>=0?'rgba(16,185,129,.75)':'rgba(239,68,68,.7)'; });
+    charts.semanal.update();
+  }
+
+  var wTbody = document.getElementById('weekly-tbody');
+  if (wTbody) {
+    wTbody.innerHTML = '';
+    var todayWk2 = m === CURR_M ? Math.floor((TODAY_DAY-1)/7)+1 : -1;
+    wks.forEach(function(wk) {
+      var wd = wkData[wk];
+      var wDays = wd.days.slice().sort();
+      var period = wDays[0].slice(8)+'/'+wDays[0].slice(5,7)+' – '+wDays[wDays.length-1].slice(8)+'/'+wDays[wDays.length-1].slice(5,7);
+      var lucro_w = wd.liq - wd.spend;
+      var roas_w  = wd.spend > 0 ? wd.bruto/wd.spend : 0;
+      var lc = lucro_w>=0?'#16a34a':'#ef4444';
+      var rc = roas_w>=1.5?'#16a34a':roas_w>=1.0?'#ca8a04':'#94a3b8';
+      var badge = wk===todayWk2 ? ' <span style="font-size:10px;background:#dbeafe;color:#2563eb;border-radius:999px;padding:1px 6px;margin-left:4px;font-weight:600">atual</span>' : '';
+      var rowBg = wk===todayWk2 ? 'background:#eff6ff;' : '';
+      wTbody.innerHTML += '<tr style="border-bottom:1px solid #f1f5f9;'+rowBg+'">'
+        +'<td style="padding:12px 16px;font-weight:600;color:#334155">Semana '+wk+badge+'</td>'
+        +'<td style="padding:12px 16px;font-size:12px;color:#94a3b8">'+period+'</td>'
+        +'<td style="padding:12px 16px;text-align:right;color:#475569">'+wd.v+'</td>'
+        +'<td style="padding:12px 16px;text-align:right;color:#475569">'+pt(wd.bruto)+'</td>'
+        +'<td style="padding:12px 16px;text-align:right;color:#475569">'+pt(wd.liq)+'</td>'
+        +'<td style="padding:12px 16px;text-align:right;color:#475569">'+(wd.spend?pt(wd.spend):'—')+'</td>'
+        +'<td style="padding:12px 16px;text-align:right;font-weight:700;color:'+lc+'">'+(lucro_w>=0?'+':'')+pt(lucro_w)+'</td>'
+        +'<td style="padding:12px 16px;text-align:right;font-weight:600;color:'+rc+'">'+(wd.spend>0?pR(roas_w):'—')+'</td>'
+        +'</tr>';
+    });
+  }
+}
+
+// ── Auto-refresh a cada 1 hora ────────────────────────────────────────────────
+var WEBHOOK = 'https://hook.us2.make.com/xec8oo29t9nftow0p3qnkcr4aslfnhhr';
+var lastTrigger = GEN_TS;
+var autoTriggered = false;
+
+function triggerUpdate(auto) {
+  var b = document.getElementById('btnAtualizar');
+  if (!auto) { b.disabled=true; b.innerHTML='⏳ Iniciando...'; }
+  fetch(WEBHOOK, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({trigger:'dashboard'})})
+  .then(function() {
+    if (auto) {
+      document.getElementById('autoRefreshStatus').textContent = '↻ Atualizando... recarregando em 2 min';
+      setTimeout(function(){ window.location.reload(); }, 120000);
+    } else {
+      b.innerHTML='✓ Iniciado! Aguarde ~1 min';
+      b.style.background='rgba(22,163,74,.5)';
+      setTimeout(function(){ b.innerHTML='↻ Atualizar agora'; b.style.background=''; b.disabled=false; }, 90000);
+    }
+  }).catch(function() {
+    if (!auto) { b.innerHTML='✗ Erro de conexão'; b.disabled=false; }
+  });
+}
+
+// Countdown e auto-trigger
+setInterval(function() {
+  var elapsed = Date.now() - lastTrigger;
+  var remaining = Math.max(0, 3600000 - elapsed);
+  if (remaining === 0 && !autoTriggered) {
+    autoTriggered = true;
+    lastTrigger = Date.now();
+    triggerUpdate(true);
+  }
+  var min = Math.floor(remaining/60000);
+  var sec = Math.floor((remaining%60000)/1000);
+  var el = document.getElementById('autoRefreshStatus');
+  if (el && !autoTriggered) {
+    el.textContent = 'Próx. atualização em '+min+'min '+(sec<10?'0':'')+sec+'s';
+  }
+}, 1000);
 </script>"""
 
 html = html.replace('__SCRIPT__', script_block)
